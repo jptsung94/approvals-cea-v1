@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { StatusBadge, type AssetStatus } from "./StatusBadge"
+import { AssetReviewSideBySide } from "./AssetReviewSideBySide"
 import { Clock, FileText, Database, BarChart3, MessageSquare, CheckCircle, XCircle, Eye } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
@@ -87,6 +88,7 @@ const typeIcons = {
 export function ApprovalDashboard() {
   const [assets, setAssets] = useState<DataAsset[]>(mockAssets)
   const [selectedAsset, setSelectedAsset] = useState<DataAsset | null>(null)
+  const [isReviewMode, setIsReviewMode] = useState(false)
   const [comment, setComment] = useState('')
   const { toast } = useToast()
 
@@ -134,8 +136,31 @@ export function ApprovalDashboard() {
     })
   }
 
+  const handleStartReview = (asset: DataAsset) => {
+    setSelectedAsset(asset)
+    setIsReviewMode(true)
+  }
+
+  const handleBackToDashboard = () => {
+    setIsReviewMode(false)
+    setSelectedAsset(null)
+  }
+
   const pendingCount = assets.filter(a => a.status === 'pending').length
   const reviewingCount = assets.filter(a => a.status === 'under_review').length
+
+  // Show side-by-side review if in review mode
+  if (isReviewMode && selectedAsset) {
+    return (
+      <AssetReviewSideBySide
+        asset={selectedAsset}
+        onApprove={handleApprove}
+        onReject={handleReject}
+        onAddComment={addComment}
+        onBack={handleBackToDashboard}
+      />
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -232,99 +257,13 @@ export function ApprovalDashboard() {
                       </Badge>
                     )}
                     
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => setSelectedAsset(asset)}
-                        >
-                          Review
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-2xl">
-                        <DialogHeader>
-                          <DialogTitle className="flex items-center gap-2">
-                            <IconComponent className="h-5 w-5" />
-                            {asset.name}
-                          </DialogTitle>
-                        </DialogHeader>
-                        
-                        <div className="space-y-4">
-                          <div>
-                            <h4 className="font-medium mb-2">Description</h4>
-                            <p className="text-sm text-muted-foreground">{asset.description}</p>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <h4 className="font-medium mb-1">Producer</h4>
-                              <p className="text-sm text-muted-foreground">{asset.producer}</p>
-                            </div>
-                            <div>
-                              <h4 className="font-medium mb-1">Type</h4>
-                              <Badge variant="outline">{asset.type}</Badge>
-                            </div>
-                          </div>
-
-                          {asset.comments.length > 0 && (
-                            <div>
-                              <h4 className="font-medium mb-2">Comments</h4>
-                              <div className="space-y-2 max-h-32 overflow-y-auto">
-                                {asset.comments.map(comment => (
-                                  <div key={comment.id} className="p-2 bg-muted rounded text-sm">
-                                    <div className="flex items-center justify-between mb-1">
-                                      <span className="font-medium">{comment.author}</span>
-                                      <span className="text-xs text-muted-foreground">
-                                        {new Date(comment.timestamp).toLocaleDateString()}
-                                      </span>
-                                    </div>
-                                    <p>{comment.message}</p>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          <div>
-                            <h4 className="font-medium mb-2">Add Feedback</h4>
-                            <Textarea
-                              placeholder="Provide feedback to the producer..."
-                              value={comment}
-                              onChange={(e) => setComment(e.target.value)}
-                              className="mb-2"
-                            />
-                            <Button
-                              onClick={() => addComment(asset.id, comment)}
-                              disabled={!comment.trim()}
-                              size="sm"
-                            >
-                              Send Feedback
-                            </Button>
-                          </div>
-
-                          <div className="flex space-x-2 pt-4 border-t">
-                            <Button
-                              onClick={() => handleApprove(asset.id)}
-                              className="flex-1"
-                              disabled={asset.status === 'approved'}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Approve
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              onClick={() => handleReject(asset.id)}
-                              className="flex-1"
-                              disabled={asset.status === 'rejected'}
-                            >
-                              <XCircle className="h-4 w-4 mr-2" />
-                              Reject
-                            </Button>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleStartReview(asset)}
+                    >
+                      Review
+                    </Button>
                   </div>
                 </div>
               )
