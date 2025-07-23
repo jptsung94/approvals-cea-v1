@@ -20,18 +20,20 @@ import {
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
-interface DataAsset {
+interface AssetSubmission {
   id: string
   name: string
-  type: 'dataset' | 'api' | 'stream' | 'model'
+  type: string
   producer: string
   submittedAt: string
   status: AssetStatus
   description: string
   category: string
-  format?: string
-  size?: string
+  metadata: Record<string, any>
   comments: Comment[]
+  priority: 'low' | 'medium' | 'high'
+  riskScore: number
+  autoApprovalEligible: boolean
 }
 
 interface Comment {
@@ -43,18 +45,23 @@ interface Comment {
 }
 
 interface AssetReviewSideBySideProps {
-  asset: DataAsset
+  asset: AssetSubmission
   onApprove: (assetId: string) => void
   onReject: (assetId: string) => void
   onAddComment: (assetId: string, message: string) => void
   onBack: () => void
 }
 
-const typeIcons = {
-  dataset: Database,
-  api: BarChart3,
-  stream: Clock,
-  model: FileText
+const getTypeIcon = (type: string) => {
+  const iconMap: Record<string, any> = {
+    dataset: Database,
+    api: BarChart3,
+    stream: Clock,
+    model: FileText,
+    file: FileText,
+    service: BarChart3
+  }
+  return iconMap[type.toLowerCase()] || FileText
 }
 
 export function AssetReviewSideBySide({
@@ -66,7 +73,7 @@ export function AssetReviewSideBySide({
 }: AssetReviewSideBySideProps) {
   const [comment, setComment] = useState('')
   const { toast } = useToast()
-  const IconComponent = typeIcons[asset.type]
+  const IconComponent = getTypeIcon(asset.type)
 
   const handleAddComment = () => {
     if (!comment.trim()) return
@@ -96,17 +103,33 @@ export function AssetReviewSideBySide({
                 className="flex items-center gap-2"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Back to Dashboard
+                Back to Queue
               </Button>
               <div className="flex items-center gap-3">
                 <IconComponent className="h-6 w-6 text-primary" />
                 <div>
                   <h1 className="text-xl font-semibold">{asset.name}</h1>
-                  <p className="text-sm text-muted-foreground">Asset Review</p>
+                  <p className="text-sm text-muted-foreground">
+                    {asset.type.charAt(0).toUpperCase() + asset.type.slice(1)} Submission Review
+                  </p>
                 </div>
               </div>
             </div>
-            <StatusBadge status={asset.status} />
+            <div className="flex items-center gap-3">
+              <Badge variant="outline" className={`capitalize ${
+                asset.priority === 'high' ? 'border-destructive text-destructive' :
+                asset.priority === 'medium' ? 'border-warning text-warning' :
+                'border-muted-foreground text-muted-foreground'
+              }`}>
+                {asset.priority} Priority
+              </Badge>
+              {asset.autoApprovalEligible && (
+                <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+                  Auto-Eligible
+                </Badge>
+              )}
+              <StatusBadge status={asset.status} />
+            </div>
           </div>
         </div>
       </div>
@@ -173,54 +196,71 @@ export function AssetReviewSideBySide({
                   </div>
                 </div>
 
-                {(asset.format || asset.size) && (
-                  <div className="grid grid-cols-2 gap-4">
-                    {asset.format && (
-                      <div className="flex items-center gap-2">
-                        <FileType className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-xs text-muted-foreground">Format</p>
-                          <p className="text-sm font-medium">{asset.format}</p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {asset.size && (
-                      <div className="flex items-center gap-2">
-                        <HardDrive className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-xs text-muted-foreground">Size</p>
-                          <p className="text-sm font-medium">{asset.size}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
               </CardContent>
             </Card>
 
-            {/* Additional metadata sections could go here */}
+            {/* Metadata Details */}
             <Card>
               <CardHeader>
-                <CardTitle>Technical Specifications</CardTitle>
+                <CardTitle>Submission Metadata</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="flex justify-between py-2 border-b border-border/50">
-                    <span className="text-sm text-muted-foreground">Data Quality Score</span>
-                    <Badge variant="outline" className="bg-success/10 text-success">95%</Badge>
+                  {Object.entries(asset.metadata).map(([key, value]) => (
+                    <div key={key} className="flex justify-between py-2 border-b border-border/50 last:border-b-0">
+                      <span className="text-sm text-muted-foreground capitalize">
+                        {key.replace(/([A-Z])/g, ' $1').trim()}
+                      </span>
+                      <div className="text-right">
+                        {typeof value === 'boolean' ? (
+                          <Badge variant={value ? "outline" : "secondary"} className={value ? "bg-success/10 text-success" : ""}>
+                            {value ? 'Yes' : 'No'}
+                          </Badge>
+                        ) : typeof value === 'number' ? (
+                          <span className="text-sm font-medium">{value}%</span>
+                        ) : Array.isArray(value) ? (
+                          <span className="text-sm">{value.join(', ')}</span>
+                        ) : (
+                          <span className="text-sm">{value}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Risk Assessment */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Risk Assessment</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Overall Risk Score</span>
+                    <Badge variant={asset.riskScore > 20 ? "destructive" : asset.riskScore > 10 ? "secondary" : "outline"}>
+                      {asset.riskScore}% Risk
+                    </Badge>
                   </div>
-                  <div className="flex justify-between py-2 border-b border-border/50">
-                    <span className="text-sm text-muted-foreground">Completeness</span>
-                    <Badge variant="outline" className="bg-success/10 text-success">98%</Badge>
-                  </div>
-                  <div className="flex justify-between py-2 border-b border-border/50">
-                    <span className="text-sm text-muted-foreground">Update Frequency</span>
-                    <span className="text-sm">Daily</span>
-                  </div>
-                  <div className="flex justify-between py-2">
-                    <span className="text-sm text-muted-foreground">Compliance Status</span>
-                    <Badge variant="outline" className="bg-success/10 text-success">GDPR Compliant</Badge>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Auto-Approval Eligible</span>
+                      <Badge variant={asset.autoApprovalEligible ? "outline" : "secondary"} 
+                             className={asset.autoApprovalEligible ? "bg-success/10 text-success" : ""}>
+                        {asset.autoApprovalEligible ? 'Yes' : 'No'}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Priority Level</span>
+                      <Badge variant="outline" className={`capitalize ${
+                        asset.priority === 'high' ? 'border-destructive text-destructive' :
+                        asset.priority === 'medium' ? 'border-warning text-warning' :
+                        'border-muted-foreground text-muted-foreground'
+                      }`}>
+                        {asset.priority}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               </CardContent>
