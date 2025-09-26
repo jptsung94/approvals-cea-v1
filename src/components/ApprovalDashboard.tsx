@@ -37,75 +37,148 @@ interface Comment {
 const mockSubmissions: AssetSubmission[] = [
   {
     id: '1',
-    name: 'Customer Analytics Dataset',
-    type: 'dataset',
-    producer: 'DataCorp Analytics',
-    submittedAt: '2024-01-20T10:30:00Z',
+    name: 'Customer Transaction Dataset',
+    type: 'Dataset',
+    producer: 'David Stevens',
+    submittedAt: '2024-01-15T10:30:00Z',
     status: 'pending',
-    description: 'Comprehensive customer behavior analysis dataset with demographics and purchase patterns.',
-    category: 'Analytics',
+    description: 'Daily customer transaction data for analytics - Q4 2024',
+    category: 'Financial Data',
     metadata: {
       format: 'Parquet',
-      size: '2.4 GB',
-      updateFrequency: 'Daily',
-      dataRetention: '5 years',
-      gdprCompliant: true,
-      qualityScore: 95
+      size: '2.5 GB',
+      sensitivity: 'Confidential',
+      recordCount: 1250000,
+      approvers: ['Kelly Schwartz (COE)', 'Rakesh Sharma (PDS)', 'Samar Sharma (AE)'],
+      sla: '5 business days',
+      currentStep: 'COE Review',
+      governanceChecks: '2 of 5 passed',
+      qualityScore: 92
     },
     comments: [],
     priority: 'high',
-    riskScore: 15,
+    riskScore: 75,
     autoApprovalEligible: false
   },
   {
     id: '2', 
-    name: 'Real-time Weather API',
-    type: 'api',
-    producer: 'Weather Systems Inc',
-    submittedAt: '2024-01-19T15:45:00Z',
+    name: 'Product Catalog API v2.1',
+    type: 'API',
+    producer: 'Alexander Ekubo',
+    submittedAt: '2024-01-14T15:45:00Z',
     status: 'under_review',
-    description: 'High-frequency weather data API with global coverage and forecasting capabilities.',
-    category: 'Environmental',
+    description: 'RESTful API for product information with enhanced filtering capabilities',
+    category: 'Product Data',
     metadata: {
-      endpoint: 'https://api.weather.com/v1',
-      rateLimit: '1000 req/min',
-      authentication: 'API Key',
-      uptime: '99.9%',
-      regions: 'Global'
+      endpoints: 12,
+      version: 'v2.1',
+      sensitivity: 'Internal',
+      approvers: ['Kelly Schwartz (COE)', 'API Coach (LOB)'],
+      sla: '3 business days',
+      currentStep: 'LOB API Coach Review',
+      governanceChecks: '4 of 5 passed',
+      authentication: 'OAuth 2.0'
     },
     comments: [
       {
         id: 'c1',
-        author: 'Sarah Mitchell',
-        message: 'Please provide more details about the API rate limits and authentication method.',
-        timestamp: '2024-01-20T09:15:00Z',
-        type: 'feedback'
+        author: 'Kelly Schwartz',
+        message: 'COE Review Complete: Authentication documentation approved. Automated standardization check passed for 95% of endpoints.',
+        timestamp: '2024-01-14T15:30:00Z',
+        type: 'approval'
       }
     ],
     priority: 'medium',
-    riskScore: 8,
+    riskScore: 42,
     autoApprovalEligible: true
   },
   {
     id: '3',
-    name: 'Financial Market Stream',
-    type: 'stream',
-    producer: 'FinTech Solutions',
-    submittedAt: '2024-01-18T08:20:00Z',
+    name: 'Marketing Campaign Data Share',
+    type: 'Data Share',
+    producer: 'Mike Chen',
+    submittedAt: '2024-01-13T08:20:00Z',
     status: 'approved',
-    description: 'Real-time financial market data stream including stocks, commodities, and forex.',
-    category: 'Financial',
+    description: 'Campaign performance metrics for Q4 2024 cross-LOB sharing',
+    category: 'Marketing Data',
     metadata: {
-      latency: '<100ms',
-      throughput: '10k events/sec',
-      protocol: 'WebSocket',
-      encryption: 'TLS 1.3',
-      marketData: ['NYSE', 'NASDAQ', 'LSE']
+      sensitivity: 'Internal',
+      recipients: ['Marketing Team', 'Analytics Team'],
+      expiryDate: '2024-12-31',
+      approvers: ['Data Guardian (Marketing)', 'DDRO'],
+      sla: '2 business days',
+      currentStep: 'Complete',
+      governanceChecks: '5 of 5 passed',
+      bulkApproved: true
+    },
+    comments: [
+      {
+        id: 'c2',
+        author: 'Alex Thompson',
+        message: 'Bulk approved with 12 other similar marketing data shares. Standard governance terms applied automatically.',
+        timestamp: '2024-01-13T10:15:00Z',
+        type: 'approval'
+      }
+    ],
+    priority: 'low',
+    riskScore: 21,
+    autoApprovalEligible: true
+  },
+  {
+    id: '4',
+    name: 'Security Event Logs Dataset',
+    type: 'Dataset',
+    producer: 'Lisa Wang',
+    submittedAt: '2024-01-12T08:20:00Z',
+    status: 'rejected',
+    description: 'Security event monitoring logs with PII data',
+    category: 'Security Data',
+    metadata: {
+      format: 'JSON',
+      size: '15.2 GB',
+      sensitivity: 'Highly Confidential',
+      recordCount: 5000000,
+      approvers: ['Kelly Schwartz (COE)', 'Security PDS', 'DDRO', 'AE'],
+      sla: '7 business days',
+      currentStep: 'Rejected - PII Remediation Required',
+      governanceChecks: '1 of 5 passed'
+    },
+    comments: [
+      {
+        id: 'c3',
+        author: 'David Rodriguez',
+        message: 'Governance Engine flagged: PII masking required for fields [user_id, email, phone]. Use CEA Governance Engine for real-time validation before resubmission.',
+        timestamp: '2024-01-12T14:20:00Z',
+        type: 'feedback'
+      }
+    ],
+    priority: 'high',
+    riskScore: 92,
+    autoApprovalEligible: false
+  },
+  {
+    id: '5',
+    name: 'User Analytics Dashboard API',
+    type: 'API',
+    producer: 'Tom Wilson',
+    submittedAt: '2024-01-16T10:00:00Z',
+    status: 'pending',
+    description: 'API for user behavior analytics dashboard - auto-generated from dataset',
+    category: 'Analytics Data',
+    metadata: {
+      endpoints: 8,
+      version: 'v1.0',
+      sensitivity: 'Internal',
+      approvers: ['Kelly Schwartz (COE)'],
+      sla: '3 business days',
+      currentStep: 'Governance Engine Validation',
+      governanceChecks: 'Auto-validation in progress',
+      autoGenerated: true
     },
     comments: [],
-    priority: 'high',
-    riskScore: 25,
-    autoApprovalEligible: false
+    priority: 'medium',
+    riskScore: 55,
+    autoApprovalEligible: true
   }
 ]
 
@@ -202,10 +275,10 @@ export function ApprovalDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Approver Dashboard Header */}
+      {/* CEA Approver Dashboard Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Asset Approval Management</h1>
-        <p className="text-muted-foreground">Review and approve asset submissions from data producers</p>
+        <h1 className="text-2xl font-bold mb-2">Approvals Core Experience - Asset Review Queue</h1>
+        <p className="text-muted-foreground">Unified, asset-agnostic approval interface with automated governance and bulk remediation</p>
       </div>
 
       {/* Priority Stats Overview */}
@@ -274,7 +347,7 @@ export function ApprovalDashboard() {
       {/* Submission Queue */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Asset Submission Queue</CardTitle>
+          <CardTitle>Prioritized Review Queue - SLA Tracked</CardTitle>
           <div className="flex items-center space-x-2">
             <Badge variant="outline" className="text-xs">
               {submissions.length} Total Submissions
@@ -327,6 +400,10 @@ export function ApprovalDashboard() {
                           <span className="capitalize">{submission.type}</span>
                           <span>•</span>
                           <span>Risk: {submission.riskScore}%</span>
+                          <span>•</span>
+                          <span>SLA: {submission.metadata.sla}</span>
+                          <span>•</span>
+                          <span className="text-xs bg-muted px-2 py-1 rounded">{submission.metadata.currentStep}</span>
                         </div>
                       </div>
                     </div>

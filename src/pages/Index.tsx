@@ -24,8 +24,8 @@ const Index = () => {
                 <Shield className="h-6 w-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">DataMarket Pro</h1>
-                <p className="text-sm text-muted-foreground">Data Asset Approval System</p>
+                <h1 className="text-xl font-bold">Approvals Core Experience App (CEA)</h1>
+                <p className="text-sm text-muted-foreground">Capital One Enterprise Data Platform</p>
               </div>
             </div>
             
@@ -33,7 +33,7 @@ const Index = () => {
               <div className="flex items-center space-x-2">
                 <Badge variant={userRole === 'steward' ? 'default' : 'secondary'}>
                   <Shield className="h-3 w-3 mr-1" />
-                  Data Steward
+                  {userRole === 'steward' ? 'Asset Approver' : 'Data Producer'}
                 </Badge>
                 <Button
                   variant="ghost"
@@ -59,12 +59,27 @@ const Index = () => {
         </div>
         <div className="relative container mx-auto px-6 py-12 text-center">
           <h2 className="text-4xl font-bold mb-4">
-            Unified Data Asset Approval Platform
+            Transform Asset Approvals with CEA
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Streamline your data marketplace with intelligent approval workflows, automated governance, 
-            and seamless collaboration between producers and stewards.
+            A unified, asset-agnostic platform that accelerates approval workflows through 
+            intelligent automation, clear transparency, and streamlined governance. 
+            Reduce RTE, eliminate back-and-forth, and strengthen data governance enterprise-wide.
           </p>
+          <div className="flex justify-center gap-8 mt-6 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-primary rounded-full"></div>
+              <span>Real-time SLA tracking</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-primary rounded-full"></div>
+              <span>Automated governance checks</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-primary rounded-full"></div>
+              <span>Bulk remediation actions</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -74,10 +89,10 @@ const Index = () => {
           <div className="space-y-8">
             {/* Steward Welcome */}
             <div className="text-center space-y-4">
-              <h3 className="text-3xl font-bold">Data Steward Dashboard</h3>
+              <h3 className="text-3xl font-bold">Approver Dashboard - CEA</h3>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Manage data asset approvals, configure automation rules, and ensure quality standards 
-                across your organization's data marketplace.
+                Streamlined, asset-agnostic approval experience with automated governance checks, 
+                bulk remediation capabilities, and intelligent prioritization for maximum efficiency.
               </p>
             </div>
 
@@ -158,10 +173,10 @@ const Index = () => {
           <div className="space-y-8">
             {/* Producer Welcome */}
             <div className="text-center space-y-4">
-              <h3 className="text-3xl font-bold">Data Producer Portal</h3>
+              <h3 className="text-3xl font-bold">Data Producer Portal - CEA</h3>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Submit your data assets for approval, track submission status, and collaborate 
-                with data stewards to bring your data to the marketplace.
+                Crystal-clear transparency with real-time status updates, clear SLA tracking, 
+                and action-oriented feedback. Never chase approvals again.
               </p>
             </div>
 
@@ -194,20 +209,20 @@ const Index = () => {
       <section className="bg-card border-t">
         <div className="container mx-auto px-6 py-12">
           <div className="text-center mb-8">
-            <h4 className="text-2xl font-bold mb-2">Platform Features</h4>
-            <p className="text-muted-foreground">Comprehensive approval workflow for all data asset types</p>
+            <h4 className="text-2xl font-bold mb-2">CEA Core Capabilities</h4>
+            <p className="text-muted-foreground">Enterprise-grade automation and governance for Capital One</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
               <CardHeader>
                 <Zap className="h-8 w-8 text-primary mb-2" />
-                <CardTitle>Smart Automation</CardTitle>
+                <CardTitle>Governance Engine</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Configure intelligent auto-approval rules based on asset type, producer trust level, 
-                  and data classification to streamline your workflow.
+                  Real-time validation against legal, security, and regulatory rules at asset creation, 
+                  dramatically reducing errors and rework before submission.
                 </p>
               </CardContent>
             </Card>
@@ -215,12 +230,12 @@ const Index = () => {
             <Card className="hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
               <CardHeader>
                 <Users className="h-8 w-8 text-primary mb-2" />
-                <CardTitle>Collaborative Review</CardTitle>
+                <CardTitle>Unified Experience</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Built-in commenting system enables seamless communication between data stewards 
-                  and producers throughout the approval process.
+                  Single, asset-agnostic approval interface with clear SLAs, automated checks, 
+                  and bulk remediation capabilities for maximum approver efficiency.
                 </p>
               </CardContent>
             </Card>
@@ -228,12 +243,12 @@ const Index = () => {
             <Card className="hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
               <CardHeader>
                 <Shield className="h-8 w-8 text-primary mb-2" />
-                <CardTitle>Governance Ready</CardTitle>
+                <CardTitle>Enterprise Governance</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Comprehensive data governance framework with classification levels, 
-                  retention policies, and compliance tracking built-in.
+                  Complete audit trails, compliance tracking, and automated quality checks 
+                  ensure robust data governance and regulatory adherence.
                 </p>
               </CardContent>
             </Card>
