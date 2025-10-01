@@ -1,12 +1,14 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Checkbox } from "@/components/ui/checkbox"
 import { StatusBadge, type AssetStatus } from "./StatusBadge"
 import { AssetReviewSideBySide } from "./AssetReviewSideBySide"
+import { ApprovalFilters, type FilterState } from "./ApprovalFilters"
+import { BulkActionsPanel } from "./BulkActionsPanel"
+import { DelegateManagement } from "./DelegateManagement"
+import { RulesConfiguration } from "./RulesConfiguration"
 import { Clock, FileText, Database, BarChart3, MessageSquare, CheckCircle, XCircle, Eye } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
@@ -198,7 +200,13 @@ export function ApprovalDashboard() {
   const [submissions, setSubmissions] = useState<AssetSubmission[]>(mockSubmissions)
   const [selectedSubmission, setSelectedSubmission] = useState<AssetSubmission | null>(null)
   const [isReviewMode, setIsReviewMode] = useState(false)
-  const [comment, setComment] = useState('')
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [filters, setFilters] = useState<FilterState>({
+    search: '',
+    status: 'all',
+    requestType: 'all',
+    approvalMethod: 'all'
+  })
   const { toast } = useToast()
 
   const handleApprove = (submissionId: string) => {
@@ -238,7 +246,6 @@ export function ApprovalDashboard() {
         ? { ...submission, comments: [...submission.comments, newComment] }
         : submission
     ))
-    setComment('')
     toast({
       title: "Comment Added",
       description: "Your feedback has been sent to the producer.",
@@ -254,6 +261,97 @@ export function ApprovalDashboard() {
     setIsReviewMode(false)
     setSelectedSubmission(null)
   }
+
+  const toggleSelection = (id: string) => {
+    const newSelected = new Set(selectedIds)
+    if (newSelected.has(id)) {
+      newSelected.delete(id)
+    } else {
+      newSelected.add(id)
+    }
+    setSelectedIds(newSelected)
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredSubmissions.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(filteredSubmissions.map(s => s.id)))
+    }
+  }
+
+  const handleBulkApprove = (comment: string) => {
+    const idsToApprove = Array.from(selectedIds)
+    setSubmissions(prev => prev.map(submission =>
+      idsToApprove.includes(submission.id)
+        ? { ...submission, status: 'approved' as AssetStatus }
+        : submission
+    ))
+    setSelectedIds(new Set())
+    toast({
+      title: "Bulk Approval Complete",
+      description: `${idsToApprove.length} submissions approved with comment: "${comment}"`
+    })
+  }
+
+  const handleBulkReject = (comment: string) => {
+    const idsToReject = Array.from(selectedIds)
+    setSubmissions(prev => prev.map(submission =>
+      idsToReject.includes(submission.id)
+        ? { ...submission, status: 'rejected' as AssetStatus }
+        : submission
+    ))
+    setSelectedIds(new Set())
+    toast({
+      title: "Bulk Rejection Complete",
+      description: `${idsToReject.length} submissions rejected with feedback: "${comment}"`,
+      variant: "destructive"
+    })
+  }
+
+  // Filter and search logic
+  const filteredSubmissions = useMemo(() => {
+    return submissions.filter(submission => {
+      // Search filter
+      if (filters.search) {
+        const searchLower = filters.search.toLowerCase()
+        const matchesSearch = 
+          submission.name.toLowerCase().includes(searchLower) ||
+          submission.producer.toLowerCase().includes(searchLower) ||
+          submission.id.toLowerCase().includes(searchLower) ||
+          submission.type.toLowerCase().includes(searchLower) ||
+          submission.category.toLowerCase().includes(searchLower)
+        if (!matchesSearch) return false
+      }
+
+      // Status filter
+      if (filters.status !== 'all') {
+        if (filters.status === 'open' && !['pending', 'under_review'].includes(submission.status)) {
+          return false
+        } else if (filters.status !== 'open' && submission.status !== filters.status) {
+          return false
+        }
+      }
+
+      // Request type filter (simplified for demo)
+      if (filters.requestType !== 'all') {
+        // In real implementation, this would check actual request type
+        return true
+      }
+
+      // Approval method filter
+      if (filters.approvalMethod !== 'all') {
+        if (filters.approvalMethod === 'auto_eligible' && !submission.autoApprovalEligible) {
+          return false
+        }
+        if (filters.approvalMethod === 'bulk_candidates' && submission.priority !== 'low') {
+          return false
+        }
+      }
+
+      return true
+    })
+  }, [submissions, filters])
 
   const pendingCount = submissions.filter(s => s.status === 'pending').length
   const reviewingCount = submissions.filter(s => s.status === 'under_review').length
@@ -344,28 +442,68 @@ export function ApprovalDashboard() {
         </Card>
       </div>
 
+      {/* Filters and Settings */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <ApprovalFilters
+                  filters={filters}
+                  onFilterChange={setFilters}
+                  resultCount={filteredSubmissions.length}
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <DelegateManagement />
+              <RulesConfiguration />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Bulk Actions Panel */}
+      <BulkActionsPanel
+        selectedCount={selectedIds.size}
+        onApproveAll={handleBulkApprove}
+        onRejectAll={handleBulkReject}
+        onClearSelection={() => setSelectedIds(new Set())}
+      />
+
       {/* Submission Queue */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Prioritized Review Queue - SLA Tracked</CardTitle>
           <div className="flex items-center space-x-2">
-            <Badge variant="outline" className="text-xs">
-              {submissions.length} Total Submissions
-            </Badge>
+            <Checkbox
+              checked={selectedIds.size === filteredSubmissions.length && filteredSubmissions.length > 0}
+              onCheckedChange={toggleSelectAll}
+              id="select-all"
+            />
+            <label htmlFor="select-all" className="text-sm text-muted-foreground cursor-pointer">
+              Select All
+            </label>
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {submissions
-              .sort((a, b) => {
-                // Priority sorting: high > medium > low, then by submission date
-                const priorityOrder = { high: 3, medium: 2, low: 1 }
-                if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
-                  return priorityOrder[b.priority] - priorityOrder[a.priority]
-                }
-                return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
-              })
-              .map((submission) => {
+            {filteredSubmissions.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No approvals match your filters</p>
+              </div>
+            ) : (
+              filteredSubmissions
+                .sort((a, b) => {
+                  // Priority sorting: high > medium > low, then by submission date
+                  const priorityOrder = { high: 3, medium: 2, low: 1 }
+                  if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+                    return priorityOrder[b.priority] - priorityOrder[a.priority]
+                  }
+                  return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+                })
+                .map((submission) => {
                 const IconComponent = getTypeIcon(submission.type)
                 const priorityColors = {
                   high: 'border-destructive/50 bg-destructive/5',
@@ -379,6 +517,10 @@ export function ApprovalDashboard() {
                     className={`flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow ${priorityColors[submission.priority]}`}
                   >
                     <div className="flex items-center space-x-4">
+                      <Checkbox
+                        checked={selectedIds.has(submission.id)}
+                        onCheckedChange={() => toggleSelection(submission.id)}
+                      />
                       <IconComponent className="h-6 w-6 text-muted-foreground" />
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -428,7 +570,8 @@ export function ApprovalDashboard() {
                     </div>
                   </div>
                 )
-              })}
+              })
+            )}
           </div>
         </CardContent>
       </Card>
