@@ -9,6 +9,7 @@ import { AutoApprovalRules } from "@/components/AutoApprovalRules"
 import { ProducerDashboard } from "@/components/ProducerDashboard"
 import { Shield, Database, Zap, Users, BarChart3, CheckCircle, Clock, Settings } from "lucide-react"
 import heroImage from "@/assets/data-marketplace-hero.jpg"
+import logo from "@/assets/logo.jpeg"
 
 const Index = () => {
   const [userRole, setUserRole] = useState<'steward' | 'producer'>('steward')
@@ -20,9 +21,7 @@ const Index = () => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-primary rounded-lg">
-                <Shield className="h-6 w-6 text-primary-foreground" />
-              </div>
+              <img src={logo} alt="Exchange Logo" className="h-10 w-10 object-contain" />
               <div>
                 <h1 className="text-xl font-bold">Approvals Core Experience App (CEA)</h1>
                 <p className="text-sm text-muted-foreground">Capital One Enterprise Data Platform</p>
