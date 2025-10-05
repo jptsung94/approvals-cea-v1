@@ -3,13 +3,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { StatusBadge, type AssetStatus } from "./StatusBadge"
 import { AssetReviewSideBySide } from "./AssetReviewSideBySide"
 import { ApprovalFilters, type FilterState } from "./ApprovalFilters"
 import { BulkActionsPanel } from "./BulkActionsPanel"
 import { DelegateManagement } from "./DelegateManagement"
 import { RulesConfiguration } from "./RulesConfiguration"
-import { Clock, FileText, Database, BarChart3, MessageSquare, CheckCircle, XCircle, Eye } from "lucide-react"
+import { Clock, FileText, Database, BarChart3, MessageSquare, CheckCircle, XCircle, Eye, ChevronDown, ChevronUp } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 interface AssetSubmission {
@@ -201,6 +202,7 @@ export function ApprovalDashboard() {
   const [selectedSubmission, setSelectedSubmission] = useState<AssetSubmission | null>(null)
   const [isReviewMode, setIsReviewMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     status: 'all',
@@ -208,6 +210,16 @@ export function ApprovalDashboard() {
     approvalMethod: 'all'
   })
   const { toast } = useToast()
+  
+  const toggleExpanded = (id: string) => {
+    const newExpanded = new Set(expandedItems)
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id)
+    } else {
+      newExpanded.add(id)
+    }
+    setExpandedItems(newExpanded)
+  }
 
   const handleApprove = (submissionId: string) => {
     setSubmissions(prev => prev.map(submission => 
@@ -510,30 +522,52 @@ export function ApprovalDashboard() {
                   medium: 'border-warning/50 bg-warning/5', 
                   low: 'border-muted'
                 }
+                const isExpanded = expandedItems.has(submission.id)
                 
                 return (
-                  <div
+                  <Collapsible
                     key={submission.id}
-                    className={`flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow ${priorityColors[submission.priority]}`}
+                    open={isExpanded}
+                    onOpenChange={() => toggleExpanded(submission.id)}
                   >
-                    <div className="flex items-center space-x-4">
-                      <Checkbox
-                        checked={selectedIds.has(submission.id)}
-                        onCheckedChange={() => toggleSelection(submission.id)}
-                      />
-                      <IconComponent className="h-6 w-6 text-muted-foreground" />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-medium">{submission.name}</h3>
-                          <Badge variant="outline" className="text-xs capitalize">
-                            {submission.priority}
-                          </Badge>
-                          {submission.autoApprovalEligible && (
-                            <Badge variant="outline" className="text-xs bg-success/10 text-success border-success/20">
-                              Auto-Eligible
+                    <div className={`border rounded-lg hover:shadow-md transition-shadow ${priorityColors[submission.priority]}`}>
+                      {/* First Row - Main Info */}
+                      <div className="flex items-center justify-between p-4">
+                        <div className="flex items-center space-x-4 flex-1">
+                          <Checkbox
+                            checked={selectedIds.has(submission.id)}
+                            onCheckedChange={() => toggleSelection(submission.id)}
+                          />
+                          <IconComponent className="h-6 w-6 text-muted-foreground" />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-medium">{submission.name}</h3>
+                              <Badge variant="outline" className="text-xs capitalize">
+                                {submission.priority}
+                              </Badge>
+                              {submission.autoApprovalEligible && (
+                                <Badge variant="outline" className="text-xs bg-success/10 text-success border-success/20">
+                                  Auto-Eligible
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground">{submission.description}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-3">
+                          <StatusBadge status={submission.status} />
+                          {submission.comments.length > 0 && (
+                            <Badge variant="secondary" className="flex items-center gap-1">
+                              <MessageSquare className="h-3 w-3" />
+                              {submission.comments.length}
                             </Badge>
                           )}
                         </div>
+                      </div>
+
+                      {/* Second Row - Metadata and Actions */}
+                      <div className="flex items-center justify-between px-4 pb-4 ml-14">
                         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                           <span>{submission.producer}</span>
                           <span>•</span>
@@ -547,28 +581,81 @@ export function ApprovalDashboard() {
                           <span>•</span>
                           <span className="text-xs bg-muted px-2 py-1 rounded">{submission.metadata.currentStep}</span>
                         </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleStartReview(submission)}
+                          >
+                            Review
+                          </Button>
+                          <CollapsibleTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              {isExpanded ? (
+                                <ChevronUp className="h-4 w-4" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </CollapsibleTrigger>
+                        </div>
                       </div>
+
+                      {/* Expandable Business Justification */}
+                      <CollapsibleContent>
+                        <div className="px-4 pb-4 ml-14 pt-2 border-t mx-4">
+                          <div className="space-y-3">
+                            <h4 className="text-sm font-semibold">Business Justification</h4>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                              {submission.metadata?.businessJustification || 
+                                "This asset is critical for improving data quality and enabling cross-functional analytics. It will support key business initiatives and provide standardized access to critical data points for decision-making across multiple departments."}
+                            </p>
+                            {submission.metadata && (
+                              <div className="grid grid-cols-3 gap-4 mt-3 text-xs">
+                                {submission.metadata.format && (
+                                  <div>
+                                    <span className="font-medium">Format: </span>
+                                    <span className="text-muted-foreground">{submission.metadata.format}</span>
+                                  </div>
+                                )}
+                                {submission.metadata.size && (
+                                  <div>
+                                    <span className="font-medium">Size: </span>
+                                    <span className="text-muted-foreground">{submission.metadata.size}</span>
+                                  </div>
+                                )}
+                                {submission.metadata.sensitivity && (
+                                  <div>
+                                    <span className="font-medium">Sensitivity: </span>
+                                    <span className="text-muted-foreground">{submission.metadata.sensitivity}</span>
+                                  </div>
+                                )}
+                                {submission.metadata.governanceChecks && (
+                                  <div>
+                                    <span className="font-medium">Governance: </span>
+                                    <span className="text-muted-foreground">{submission.metadata.governanceChecks}</span>
+                                  </div>
+                                )}
+                                {submission.metadata.qualityScore && (
+                                  <div>
+                                    <span className="font-medium">Quality Score: </span>
+                                    <span className="text-muted-foreground">{submission.metadata.qualityScore}%</span>
+                                  </div>
+                                )}
+                                {submission.metadata.approvers && (
+                                  <div className="col-span-3">
+                                    <span className="font-medium">Approvers: </span>
+                                    <span className="text-muted-foreground">{submission.metadata.approvers.join(', ')}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CollapsibleContent>
                     </div>
-                    
-                    <div className="flex items-center space-x-3">
-                      <StatusBadge status={submission.status} />
-                      
-                      {submission.comments.length > 0 && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                          <MessageSquare className="h-3 w-3" />
-                          {submission.comments.length}
-                        </Badge>
-                      )}
-                      
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleStartReview(submission)}
-                      >
-                        Review
-                      </Button>
-                    </div>
-                  </div>
+                  </Collapsible>
                 )
               })
             )}

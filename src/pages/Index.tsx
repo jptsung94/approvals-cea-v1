@@ -8,7 +8,6 @@ import { AssetSubmissionForm } from "@/components/AssetSubmissionForm"
 import { AutoApprovalRules } from "@/components/AutoApprovalRules"
 import { ProducerDashboard } from "@/components/ProducerDashboard"
 import { Shield, Database, Zap, Users, BarChart3, CheckCircle, Clock, Settings } from "lucide-react"
-import heroImage from "@/assets/data-marketplace-hero.jpg"
 import logo from "@/assets/logo.jpeg"
 
 const Index = () => {
@@ -47,38 +46,13 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0">
-          <img 
-            src={heroImage} 
-            alt="Data Marketplace Platform" 
-            className="w-full h-full object-cover opacity-20"
-          />
-        </div>
-        <div className="relative container mx-auto px-6 py-12 text-center">
-          <h2 className="text-4xl font-bold mb-4">
-            Transform Asset Approvals with CEA
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            A unified, asset-agnostic platform that accelerates approval workflows through 
-            intelligent automation, clear transparency, and streamlined governance. 
-            Reduce RTE, eliminate back-and-forth, and strengthen data governance enterprise-wide.
+      {/* Page Title */}
+      <section className="border-b bg-card">
+        <div className="container mx-auto px-6 py-6">
+          <h1 className="text-3xl font-bold">MyApprovals Dashboard</h1>
+          <p className="text-muted-foreground mt-2">
+            Manage all your approval requests in one centralized location
           </p>
-          <div className="flex justify-center gap-8 mt-6 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-primary rounded-full"></div>
-              <span>Real-time SLA tracking</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-primary rounded-full"></div>
-              <span>Automated governance checks</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-primary rounded-full"></div>
-              <span>Bulk remediation actions</span>
-            </div>
-          </div>
         </div>
       </section>
 
