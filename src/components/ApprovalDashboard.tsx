@@ -14,8 +14,11 @@ import { SLAIndicator } from "./SLAIndicator"
 import { EscalationButton } from "./EscalationButton"
 import { ApprovalTimeline } from "./ApprovalTimeline"
 import { PendingApprovalsSummary } from "./PendingApprovalsSummary"
+import { NotificationCenter } from "./NotificationCenter"
+import { ErrorRecovery } from "./ErrorRecovery"
 import { Clock, FileText, Database, BarChart3, MessageSquare, CheckCircle, XCircle, Eye, ChevronDown, ChevronUp } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useRealtimeAssets } from "@/hooks/useRealtimeAssets"
 
 interface AssetSubmission {
   id: string
@@ -215,6 +218,7 @@ export function ApprovalDashboard() {
   const [isReviewMode, setIsReviewMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
+  const [failedAutoApprovals, setFailedAutoApprovals] = useState<Set<string>>(new Set())
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     status: 'all',
@@ -222,6 +226,34 @@ export function ApprovalDashboard() {
     approvalMethod: 'all'
   })
   const { toast } = useToast()
+
+  // Real-time updates
+  useRealtimeAssets({
+    onAssetUpdate: (payload) => {
+      setSubmissions(prev => prev.map(s =>
+        s.id === payload.new.id ? { ...s, status: payload.new.status } : s
+      ))
+    },
+    onCommentAdded: (payload) => {
+      setSubmissions(prev => prev.map(s =>
+        s.id === payload.new.asset_id
+          ? {
+              ...s,
+              comments: [
+                ...s.comments,
+                {
+                  id: payload.new.id,
+                  author: payload.new.author_name,
+                  message: payload.new.message,
+                  timestamp: payload.new.created_at,
+                  type: payload.new.comment_type
+                }
+              ]
+            }
+          : s
+      ))
+    }
+  })
   
   const toggleExpanded = (id: string) => {
     const newExpanded = new Set(expandedItems)
@@ -304,6 +336,32 @@ export function ApprovalDashboard() {
           }
         : submission
     ))
+  }
+
+  const handleRetryAutoApproval = (submissionId: string) => {
+    // Simulate retry logic
+    const success = Math.random() > 0.3 // 70% success rate
+    
+    if (success) {
+      setSubmissions(prev => prev.map(s =>
+        s.id === submissionId ? { ...s, status: 'approved' as AssetStatus } : s
+      ))
+      setFailedAutoApprovals(prev => {
+        const next = new Set(prev)
+        next.delete(submissionId)
+        return next
+      })
+      toast({
+        title: "Auto-Approval Successful",
+        description: "The asset has been automatically approved"
+      })
+    } else {
+      toast({
+        title: "Retry Failed",
+        description: "Auto-approval failed again. Consider manual review.",
+        variant: "destructive"
+      })
+    }
   }
   
   // Generate timeline events for selected submission
@@ -482,9 +540,12 @@ export function ApprovalDashboard() {
   return (
     <div className="space-y-6">
       {/* CEA Approver Dashboard Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Approvals Core Experience - Asset Review Queue</h1>
-        <p className="text-muted-foreground">Unified, asset-agnostic approval interface with automated governance and bulk remediation</p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Approvals Core Experience - Asset Review Queue</h1>
+          <p className="text-muted-foreground">Unified, asset-agnostic approval interface with automated governance and bulk remediation</p>
+        </div>
+        <NotificationCenter />
       </div>
 
       {/* Priority Stats Overview */}
@@ -582,6 +643,25 @@ export function ApprovalDashboard() {
 
       {/* Pending Approvals Summary */}
       <PendingApprovalsSummary items={pendingApprovalsSummary} />
+
+      {/* Failed Auto-Approvals - Error Recovery */}
+      {submissions.filter(s => failedAutoApprovals.has(s.id)).map(submission => (
+        <ErrorRecovery
+          key={submission.id}
+          assetId={submission.id}
+          assetName={submission.name}
+          errorType="auto_approval_failed"
+          errorMessage="The automated approval process encountered an issue due to incomplete governance checks."
+          suggestedActions={[
+            "Review governance check results in detail",
+            "Verify all required metadata is present",
+            "Check if similar assets were recently approved",
+            "Consider manual review if retry fails"
+          ]}
+          onRetry={() => handleRetryAutoApproval(submission.id)}
+          onManualReview={() => handleStartReview(submission)}
+        />
+      ))}
 
       {/* Submission Queue */}
       <Card>

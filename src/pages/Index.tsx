@@ -7,6 +7,7 @@ import { ApprovalDashboard } from "@/components/ApprovalDashboard"
 import { AssetSubmissionForm } from "@/components/AssetSubmissionForm"
 import { AutoApprovalRules } from "@/components/AutoApprovalRules"
 import { ProducerDashboard } from "@/components/ProducerDashboard"
+import { NotificationCenter } from "@/components/NotificationCenter"
 import { Shield, Database, Zap, Users, BarChart3, CheckCircle, Clock, Settings } from "lucide-react"
 import logo from "@/assets/logo.jpeg"
 
@@ -28,6 +29,7 @@ const Index = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              <NotificationCenter />
               <div className="flex items-center space-x-2">
                 <Badge variant={userRole === 'steward' ? 'default' : 'secondary'}>
                   <Shield className="h-3 w-3 mr-1" />

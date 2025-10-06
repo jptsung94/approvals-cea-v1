@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Upload, FileText, Database, BarChart3, Clock, CheckCircle, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { ApproverSuggestions } from "./ApproverSuggestions"
+import { ApproverFavorites } from "./ApproverFavorites"
 
 type AssetType = 'dataset' | 'api' | 'stream' | 'model'
 
@@ -432,17 +433,29 @@ export function AssetSubmissionForm() {
               </div>
 
               {/* Smart Approver Recommendations */}
-              <ApproverSuggestions
-                assetType={formData.type}
-                category={formData.category}
-                classification={formData.dataGovernance.dataClassification}
-                onSelectApprover={(approver) => {
-                  if (!selectedApprovers.includes(approver.name)) {
-                    setSelectedApprovers([...selectedApprovers, approver.name])
-                  }
-                }}
-                selectedApprovers={selectedApprovers}
-              />
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold">Select Approvers</h4>
+                  <ApproverFavorites
+                    onSelectApprover={(approver) => {
+                      if (!selectedApprovers.includes(approver.name)) {
+                        setSelectedApprovers([...selectedApprovers, approver.name])
+                      }
+                    }}
+                  />
+                </div>
+                <ApproverSuggestions
+                  assetType={formData.type}
+                  category={formData.category}
+                  classification={formData.dataGovernance.dataClassification}
+                  onSelectApprover={(approver) => {
+                    if (!selectedApprovers.includes(approver.name)) {
+                      setSelectedApprovers([...selectedApprovers, approver.name])
+                    }
+                  }}
+                  selectedApprovers={selectedApprovers}
+                />
+              </div>
 
               <div className="bg-muted p-4 rounded-lg space-y-3">
                 <div className="grid grid-cols-2 gap-4 text-sm">

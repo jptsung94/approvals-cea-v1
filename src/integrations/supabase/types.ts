@@ -53,6 +53,42 @@ export type Database = {
         }
         Relationships: []
       }
+      approver_favorites: {
+        Row: {
+          approver_email: string
+          approver_id: string
+          approver_name: string
+          approver_role: string | null
+          created_at: string | null
+          id: string
+          last_used_at: string | null
+          times_used: number | null
+          user_id: string
+        }
+        Insert: {
+          approver_email: string
+          approver_id: string
+          approver_name: string
+          approver_role?: string | null
+          created_at?: string | null
+          id?: string
+          last_used_at?: string | null
+          times_used?: number | null
+          user_id: string
+        }
+        Update: {
+          approver_email?: string
+          approver_id?: string
+          approver_name?: string
+          approver_role?: string | null
+          created_at?: string | null
+          id?: string
+          last_used_at?: string | null
+          times_used?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       asset_approvers: {
         Row: {
           approved_at: string | null
