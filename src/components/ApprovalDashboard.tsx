@@ -10,6 +10,10 @@ import { ApprovalFilters, type FilterState } from "./ApprovalFilters"
 import { BulkActionsPanel } from "./BulkActionsPanel"
 import { DelegateManagement } from "./DelegateManagement"
 import { RulesConfiguration } from "./RulesConfiguration"
+import { SLAIndicator } from "./SLAIndicator"
+import { EscalationButton } from "./EscalationButton"
+import { ApprovalTimeline } from "./ApprovalTimeline"
+import { PendingApprovalsSummary } from "./PendingApprovalsSummary"
 import { Clock, FileText, Database, BarChart3, MessageSquare, CheckCircle, XCircle, Eye, ChevronDown, ChevronUp } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
@@ -35,6 +39,14 @@ interface Comment {
   message: string
   timestamp: string
   type: 'feedback' | 'question' | 'approval'
+}
+
+interface TimelineEvent {
+  id: string
+  type: 'submitted' | 'review_started' | 'comment' | 'approved' | 'rejected' | 'escalated' | 'reassigned'
+  actor: string
+  message: string
+  timestamp: string
 }
 
 const mockSubmissions: AssetSubmission[] = [
@@ -273,6 +285,90 @@ export function ApprovalDashboard() {
     setIsReviewMode(false)
     setSelectedSubmission(null)
   }
+  
+  const handleEscalate = (submissionId: string, reason: string, escalateTo: string) => {
+    setSubmissions(prev => prev.map(submission =>
+      submission.id === submissionId
+        ? {
+            ...submission,
+            comments: [
+              ...submission.comments,
+              {
+                id: Math.random().toString(36).substr(2, 9),
+                author: 'System',
+                message: `Escalated to ${escalateTo}: ${reason}`,
+                timestamp: new Date().toISOString(),
+                type: 'feedback' as const
+              }
+            ]
+          }
+        : submission
+    ))
+  }
+  
+  // Generate timeline events for selected submission
+  const getTimelineEvents = (submission: AssetSubmission): TimelineEvent[] => {
+    const events: TimelineEvent[] = [
+      {
+        id: '1',
+        type: 'submitted',
+        actor: submission.producer,
+        message: `Submitted ${submission.type} for approval`,
+        timestamp: submission.submittedAt
+      }
+    ]
+    
+    if (submission.status === 'under_review') {
+      events.push({
+        id: '2',
+        type: 'review_started',
+        actor: submission.metadata.approvers?.[0] || 'Approver',
+        message: 'Started review process',
+        timestamp: new Date(new Date(submission.submittedAt).getTime() + 3600000).toISOString()
+      })
+    }
+    
+    submission.comments.forEach((comment, index) => {
+      events.push({
+        id: `comment-${index}`,
+        type: comment.type === 'approval' ? 'approved' : 'comment',
+        actor: comment.author,
+        message: comment.message,
+        timestamp: comment.timestamp
+      })
+    })
+    
+    return events.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+  }
+  
+  // Calculate pending approvals summary
+  const pendingApprovalsSummary = useMemo(() => {
+    const approverMap = new Map<string, { count: number, oldestDays: number }>()
+    
+    submissions
+      .filter(s => s.status === 'pending' || s.status === 'under_review')
+      .forEach(submission => {
+        const approvers = submission.metadata.approvers || []
+        approvers.forEach((approver: string) => {
+          const existing = approverMap.get(approver) || { count: 0, oldestDays: 0 }
+          const daysSinceSubmit = Math.floor(
+            (new Date().getTime() - new Date(submission.submittedAt).getTime()) / (1000 * 60 * 60 * 24)
+          )
+          approverMap.set(approver, {
+            count: existing.count + 1,
+            oldestDays: Math.max(existing.oldestDays, daysSinceSubmit)
+          })
+        })
+      })
+    
+    return Array.from(approverMap.entries())
+      .map(([approver, data]) => ({
+        approver,
+        count: data.count,
+        oldestPendingDays: data.oldestDays
+      }))
+      .sort((a, b) => b.oldestPendingDays - a.oldestPendingDays)
+  }, [submissions])
 
   const toggleSelection = (id: string) => {
     const newSelected = new Set(selectedIds)
@@ -484,6 +580,9 @@ export function ApprovalDashboard() {
         onClearSelection={() => setSelectedIds(new Set())}
       />
 
+      {/* Pending Approvals Summary */}
+      <PendingApprovalsSummary items={pendingApprovalsSummary} />
+
       {/* Submission Queue */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -556,6 +655,11 @@ export function ApprovalDashboard() {
                         </div>
                         
                         <div className="flex items-center space-x-3">
+                          <SLAIndicator 
+                            submittedAt={submission.submittedAt}
+                            slaTarget={submission.metadata.sla || '5 business days'}
+                            status={submission.status}
+                          />
                           <StatusBadge status={submission.status} />
                           {submission.comments.length > 0 && (
                             <Badge variant="secondary" className="flex items-center gap-1">
@@ -583,6 +687,15 @@ export function ApprovalDashboard() {
                         </div>
                         
                         <div className="flex items-center space-x-2">
+                          {(submission.status === 'pending' || submission.status === 'under_review') && (
+                            <EscalationButton
+                              submissionId={submission.id}
+                              submissionName={submission.name}
+                              currentApprover={submission.metadata.approvers?.[0] || 'Unknown'}
+                              onEscalate={(reason, escalateTo) => handleEscalate(submission.id, reason, escalateTo)}
+                              variant="ghost"
+                            />
+                          )}
                           <Button 
                             variant="outline" 
                             size="sm"
@@ -602,55 +715,67 @@ export function ApprovalDashboard() {
                         </div>
                       </div>
 
-                      {/* Expandable Business Justification */}
+                      {/* Expandable Details - Business Justification and Timeline */}
                       <CollapsibleContent>
                         <div className="px-4 pb-4 ml-14 pt-2 border-t mx-4">
-                          <div className="space-y-3">
-                            <h4 className="text-sm font-semibold">Business Justification</h4>
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                              {submission.metadata?.businessJustification || 
-                                "This asset is critical for improving data quality and enabling cross-functional analytics. It will support key business initiatives and provide standardized access to critical data points for decision-making across multiple departments."}
-                            </p>
-                            {submission.metadata && (
-                              <div className="grid grid-cols-3 gap-4 mt-3 text-xs">
-                                {submission.metadata.format && (
-                                  <div>
-                                    <span className="font-medium">Format: </span>
-                                    <span className="text-muted-foreground">{submission.metadata.format}</span>
-                                  </div>
-                                )}
-                                {submission.metadata.size && (
-                                  <div>
-                                    <span className="font-medium">Size: </span>
-                                    <span className="text-muted-foreground">{submission.metadata.size}</span>
-                                  </div>
-                                )}
-                                {submission.metadata.sensitivity && (
-                                  <div>
-                                    <span className="font-medium">Sensitivity: </span>
-                                    <span className="text-muted-foreground">{submission.metadata.sensitivity}</span>
-                                  </div>
-                                )}
-                                {submission.metadata.governanceChecks && (
-                                  <div>
-                                    <span className="font-medium">Governance: </span>
-                                    <span className="text-muted-foreground">{submission.metadata.governanceChecks}</span>
-                                  </div>
-                                )}
-                                {submission.metadata.qualityScore && (
-                                  <div>
-                                    <span className="font-medium">Quality Score: </span>
-                                    <span className="text-muted-foreground">{submission.metadata.qualityScore}%</span>
-                                  </div>
-                                )}
-                                {submission.metadata.approvers && (
-                                  <div className="col-span-3">
-                                    <span className="font-medium">Approvers: </span>
-                                    <span className="text-muted-foreground">{submission.metadata.approvers.join(', ')}</span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Business Justification */}
+                            <div className="space-y-3">
+                              <h4 className="text-sm font-semibold">Business Justification</h4>
+                              <p className="text-sm text-muted-foreground leading-relaxed">
+                                {submission.metadata?.businessJustification || 
+                                  "This asset is critical for improving data quality and enabling cross-functional analytics. It will support key business initiatives and provide standardized access to critical data points for decision-making across multiple departments."}
+                              </p>
+                              {submission.metadata && (
+                                <div className="grid grid-cols-2 gap-3 mt-3 text-xs">
+                                  {submission.metadata.format && (
+                                    <div>
+                                      <span className="font-medium">Format: </span>
+                                      <span className="text-muted-foreground">{submission.metadata.format}</span>
+                                    </div>
+                                  )}
+                                  {submission.metadata.size && (
+                                    <div>
+                                      <span className="font-medium">Size: </span>
+                                      <span className="text-muted-foreground">{submission.metadata.size}</span>
+                                    </div>
+                                  )}
+                                  {submission.metadata.sensitivity && (
+                                    <div>
+                                      <span className="font-medium">Sensitivity: </span>
+                                      <span className="text-muted-foreground">{submission.metadata.sensitivity}</span>
+                                    </div>
+                                  )}
+                                  {submission.metadata.governanceChecks && (
+                                    <div>
+                                      <span className="font-medium">Governance: </span>
+                                      <span className="text-muted-foreground">{submission.metadata.governanceChecks}</span>
+                                    </div>
+                                  )}
+                                  {submission.metadata.qualityScore && (
+                                    <div>
+                                      <span className="font-medium">Quality Score: </span>
+                                      <span className="text-muted-foreground">{submission.metadata.qualityScore}%</span>
+                                    </div>
+                                  )}
+                                  {submission.metadata.approvers && (
+                                    <div className="col-span-2">
+                                      <span className="font-medium">Approvers: </span>
+                                      <span className="text-muted-foreground">{submission.metadata.approvers.join(', ')}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Approval Timeline */}
+                            <div>
+                              <ApprovalTimeline 
+                                events={getTimelineEvents(submission)}
+                                currentStatus={submission.status}
+                                className="border-0 shadow-none"
+                              />
+                            </div>
                           </div>
                         </div>
                       </CollapsibleContent>
