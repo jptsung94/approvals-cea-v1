@@ -168,57 +168,6 @@ const Index = () => {
           </div>
         )}
       </main>
-
-      {/* Features Section */}
-      <section className="bg-card border-t">
-        <div className="container mx-auto px-6 py-12">
-          <div className="text-center mb-8">
-            <h4 className="text-2xl font-bold mb-2">CEA Core Capabilities</h4>
-            <p className="text-muted-foreground">Enterprise-grade automation and governance for Capital One</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
-              <CardHeader>
-                <Zap className="h-8 w-8 text-primary mb-2" />
-                <CardTitle>Governance Engine</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Real-time validation against legal, security, and regulatory rules at asset creation, 
-                  dramatically reducing errors and rework before submission.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
-              <CardHeader>
-                <Users className="h-8 w-8 text-primary mb-2" />
-                <CardTitle>Unified Experience</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Single, asset-agnostic approval interface with clear SLAs, automated checks, 
-                  and bulk remediation capabilities for maximum approver efficiency.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
-              <CardHeader>
-                <Shield className="h-8 w-8 text-primary mb-2" />
-                <CardTitle>Enterprise Governance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Complete audit trails, compliance tracking, and automated quality checks 
-                  ensure robust data governance and regulatory adherence.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
     </div>
   )
 };
