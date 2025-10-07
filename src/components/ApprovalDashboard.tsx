@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { StatusBadge, type AssetStatus } from "./StatusBadge"
-import { AssetReviewSideBySide } from "./AssetReviewSideBySide"
+import { ApprovalReviewModal } from "./ApprovalReviewModal"
 import { ApprovalFilters, type FilterState } from "./ApprovalFilters"
 import { BulkActionsPanel } from "./BulkActionsPanel"
 import { DelegateManagement } from "./DelegateManagement"
@@ -16,9 +16,17 @@ import { ApprovalTimeline } from "./ApprovalTimeline"
 import { PendingApprovalsSummary } from "./PendingApprovalsSummary"
 import { NotificationCenter } from "./NotificationCenter"
 import { ErrorRecovery } from "./ErrorRecovery"
-import { Clock, FileText, Database, BarChart3, MessageSquare, CheckCircle, XCircle, Eye, ChevronDown, ChevronUp } from "lucide-react"
+import { Clock, FileText, Database, BarChart3, MessageSquare, CheckCircle, XCircle, Eye, ChevronDown, ChevronUp, ArrowUpDown } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useRealtimeAssets } from "@/hooks/useRealtimeAssets"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
 
 interface AssetSubmission {
   id: string
@@ -41,7 +49,8 @@ interface Comment {
   author: string
   message: string
   timestamp: string
-  type: 'feedback' | 'question' | 'approval'
+  type: 'feedback' | 'question' | 'approval' | 'revision_request'
+  phase?: string
 }
 
 interface TimelineEvent {
@@ -215,10 +224,13 @@ const getTypeIcon = (type: string) => {
 export function ApprovalDashboard() {
   const [submissions, setSubmissions] = useState<AssetSubmission[]>(mockSubmissions)
   const [selectedSubmission, setSelectedSubmission] = useState<AssetSubmission | null>(null)
-  const [isReviewMode, setIsReviewMode] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
   const [failedAutoApprovals, setFailedAutoApprovals] = useState<Set<string>>(new Set())
+  const [currentPage, setCurrentPage] = useState(1)
+  const [sortColumn, setSortColumn] = useState<'name' | 'submittedAt' | 'priority'>('submittedAt')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     status: 'all',
@@ -226,6 +238,7 @@ export function ApprovalDashboard() {
     approvalMethod: 'all'
   })
   const { toast } = useToast()
+  const ITEMS_PER_PAGE = 10
 
   // Real-time updates
   useRealtimeAssets({
@@ -265,9 +278,19 @@ export function ApprovalDashboard() {
     setExpandedItems(newExpanded)
   }
 
-  const handleApprove = (submissionId: string) => {
+  const handleApprove = (submissionId: string, comment: string) => {
     setSubmissions(prev => prev.map(submission => 
-      submission.id === submissionId ? { ...submission, status: 'approved' as AssetStatus } : submission
+      submission.id === submissionId ? { 
+        ...submission, 
+        status: 'approved' as AssetStatus,
+        comments: [...submission.comments, {
+          id: Date.now().toString(),
+          author: 'Data Steward',
+          message: comment,
+          timestamp: new Date().toISOString(),
+          type: 'approval' as const
+        }]
+      } : submission
     ))
     toast({
       title: "Submission Approved",
@@ -275,9 +298,19 @@ export function ApprovalDashboard() {
     })
   }
 
-  const handleReject = (submissionId: string) => {
+  const handleReject = (submissionId: string, comment: string) => {
     setSubmissions(prev => prev.map(submission => 
-      submission.id === submissionId ? { ...submission, status: 'rejected' as AssetStatus } : submission
+      submission.id === submissionId ? { 
+        ...submission, 
+        status: 'rejected' as AssetStatus,
+        comments: [...submission.comments, {
+          id: Date.now().toString(),
+          author: 'Data Steward',
+          message: comment,
+          timestamp: new Date().toISOString(),
+          type: 'feedback' as const
+        }]
+      } : submission
     ))
     toast({
       title: "Submission Rejected",
@@ -286,7 +319,36 @@ export function ApprovalDashboard() {
     })
   }
 
-  const addComment = (submissionId: string, message: string) => {
+  const handleRequestRevision = (submissionId: string, comment: string, referTo: string) => {
+    setSubmissions(prev => prev.map(submission =>
+      submission.id === submissionId
+        ? {
+            ...submission,
+            status: 'pending' as AssetStatus,
+            metadata: {
+              ...submission.metadata,
+              currentStep: `Pending ${referTo} Review`
+            },
+            comments: [
+              ...submission.comments,
+              {
+                id: Date.now().toString(),
+                author: 'Data Steward',
+                message: `Revision requested: ${comment}`,
+                timestamp: new Date().toISOString(),
+                type: 'revision_request' as const
+              }
+            ]
+          }
+        : submission
+    ))
+    toast({
+      title: "Revision Requested",
+      description: `Request has been referred to ${referTo} team`,
+    })
+  }
+
+  const addComment = (submissionId: string, message: string, phase?: string) => {
     if (!message.trim()) return
 
     const newComment: Comment = {
@@ -294,7 +356,8 @@ export function ApprovalDashboard() {
       author: 'Data Steward',
       message: message.trim(),
       timestamp: new Date().toISOString(),
-      type: 'feedback'
+      type: 'feedback',
+      phase
     }
 
     setSubmissions(prev => prev.map(submission => 
@@ -310,11 +373,11 @@ export function ApprovalDashboard() {
 
   const handleStartReview = (submission: AssetSubmission) => {
     setSelectedSubmission(submission)
-    setIsReviewMode(true)
+    setIsModalOpen(true)
   }
 
-  const handleBackToDashboard = () => {
-    setIsReviewMode(false)
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
     setSelectedSubmission(null)
   }
   
@@ -475,9 +538,19 @@ export function ApprovalDashboard() {
     })
   }
 
+  // Sorting logic
+  const handleSort = (column: typeof sortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortColumn(column)
+      setSortDirection('desc')
+    }
+  }
+
   // Filter and search logic
   const filteredSubmissions = useMemo(() => {
-    return submissions.filter(submission => {
+    let filtered = submissions.filter(submission => {
       // Search filter
       if (filters.search) {
         const searchLower = filters.search.toLowerCase()
@@ -517,25 +590,37 @@ export function ApprovalDashboard() {
 
       return true
     })
-  }, [submissions, filters])
+
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      let compareValue = 0
+      
+      if (sortColumn === 'name') {
+        compareValue = a.name.localeCompare(b.name)
+      } else if (sortColumn === 'submittedAt') {
+        compareValue = new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime()
+      } else if (sortColumn === 'priority') {
+        const priorityOrder = { high: 3, medium: 2, low: 1 }
+        compareValue = priorityOrder[a.priority] - priorityOrder[b.priority]
+      }
+      
+      return sortDirection === 'asc' ? compareValue : -compareValue
+    })
+
+    return sorted
+  }, [submissions, filters, sortColumn, sortDirection])
+
+  // Pagination
+  const totalPages = Math.ceil(filteredSubmissions.length / ITEMS_PER_PAGE)
+  const paginatedSubmissions = filteredSubmissions.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  )
 
   const pendingCount = submissions.filter(s => s.status === 'pending').length
   const reviewingCount = submissions.filter(s => s.status === 'under_review').length
   const highPriorityCount = submissions.filter(s => s.priority === 'high' && s.status === 'pending').length
   const autoApprovalEligibleCount = submissions.filter(s => s.autoApprovalEligible && s.status === 'pending').length
-
-  // Show side-by-side review if in review mode
-  if (isReviewMode && selectedSubmission) {
-    return (
-      <AssetReviewSideBySide
-        asset={selectedSubmission}
-        onApprove={handleApprove}
-        onReject={handleReject}
-        onAddComment={addComment}
-        onBack={handleBackToDashboard}
-      />
-    )
-  }
 
   return (
     <div className="space-y-6">
@@ -665,36 +750,42 @@ export function ApprovalDashboard() {
 
       {/* Submission Queue */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Prioritized Review Queue - SLA Tracked</CardTitle>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              checked={selectedIds.size === filteredSubmissions.length && filteredSubmissions.length > 0}
-              onCheckedChange={toggleSelectAll}
-              id="select-all"
-            />
-            <label htmlFor="select-all" className="text-sm text-muted-foreground cursor-pointer">
-              Select All
-            </label>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Prioritized Review Queue - SLA Tracked</CardTitle>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-sm">
+                <Button variant="ghost" size="sm" onClick={() => handleSort('name')} className="gap-1">
+                  Name {sortColumn === 'name' && <ArrowUpDown className="h-3 w-3" />}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleSort('submittedAt')} className="gap-1">
+                  Date {sortColumn === 'submittedAt' && <ArrowUpDown className="h-3 w-3" />}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleSort('priority')} className="gap-1">
+                  Priority {sortColumn === 'priority' && <ArrowUpDown className="h-3 w-3" />}
+                </Button>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  checked={selectedIds.size === filteredSubmissions.length && filteredSubmissions.length > 0}
+                  onCheckedChange={toggleSelectAll}
+                  id="select-all"
+                />
+                <label htmlFor="select-all" className="text-sm text-muted-foreground cursor-pointer">
+                  Select All
+                </label>
+              </div>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {filteredSubmissions.length === 0 ? (
+            {paginatedSubmissions.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">No approvals match your filters</p>
               </div>
             ) : (
-              filteredSubmissions
-                .sort((a, b) => {
-                  // Priority sorting: high > medium > low, then by submission date
-                  const priorityOrder = { high: 3, medium: 2, low: 1 }
-                  if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
-                    return priorityOrder[b.priority] - priorityOrder[a.priority]
-                  }
-                  return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
-                })
-                .map((submission) => {
+              paginatedSubmissions.map((submission) => {
                 const IconComponent = getTypeIcon(submission.type)
                 const priorityColors = {
                   high: 'border-destructive/50 bg-destructive/5',
@@ -865,8 +956,52 @@ export function ApprovalDashboard() {
               })
             )}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-6 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(page)}
+                        isActive={currentPage === page}
+                        className="cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Review Modal */}
+      <ApprovalReviewModal
+        asset={selectedSubmission}
+        open={isModalOpen}
+        onClose={handleCloseModal}
+        onApprove={handleApprove}
+        onReject={handleReject}
+        onRequestRevision={handleRequestRevision}
+        onAddComment={addComment}
+      />
     </div>
   )
 }
