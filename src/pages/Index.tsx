@@ -8,7 +8,7 @@ import { AssetSubmissionForm } from "@/components/AssetSubmissionForm"
 import { AutoApprovalRules } from "@/components/AutoApprovalRules"
 import { ProducerDashboard } from "@/components/ProducerDashboard"
 import { NotificationCenter } from "@/components/NotificationCenter"
-import { Shield, Database, Zap, Users, BarChart3, CheckCircle, Clock, Settings } from "lucide-react"
+import { Shield, Database, Zap, Users, BarChart3, CheckCircle, Clock, Settings, HelpCircle, LayoutDashboard, User } from "lucide-react"
 import logo from "@/assets/logo-greyscale.png"
 
 const Index = () => {
@@ -22,15 +22,24 @@ const Index = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <img src={logo} alt="Exchange Logo" className="h-10 w-10 object-contain" />
-              <div>
-                <h1 className="text-xl font-bold">Approvals Core Experience App (CEA)</h1>
-                <p className="text-sm text-muted-foreground">Capital One Enterprise Data Platform</p>
-              </div>
+              <h1 className="text-xl font-bold">MyApprovals Dashboard</h1>
             </div>
             
             <div className="flex items-center space-x-4">
+              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <HelpCircle className="h-4 w-4" />
+                Help
+              </Button>
               <NotificationCenter />
-              <div className="flex items-center space-x-2">
+              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <LayoutDashboard className="h-4 w-4" />
+                Dashboard
+              </Button>
+              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Profile
+              </Button>
+              <div className="flex items-center space-x-2 border-l pl-4">
                 <Badge variant={userRole === 'steward' ? 'default' : 'secondary'}>
                   <Shield className="h-3 w-3 mr-1" />
                   {userRole === 'steward' ? 'Asset Approver' : 'Data Producer'}
@@ -51,10 +60,9 @@ const Index = () => {
       {/* Page Title */}
       <section className="border-b bg-card">
         <div className="container mx-auto px-6 py-6">
-          <h1 className="text-3xl font-bold">MyApprovals Dashboard</h1>
-          <p className="text-muted-foreground mt-2">
-            Manage all your approval requests in one centralized location
-          </p>
+          <h1 className="text-3xl font-bold">
+            {userRole === 'steward' ? 'Approver Dashboard' : 'Producer Dashboard'}
+          </h1>
         </div>
       </section>
 
@@ -62,14 +70,6 @@ const Index = () => {
       <main className="container mx-auto px-6 py-8">
         {userRole === 'steward' ? (
           <div className="space-y-8">
-            {/* Steward Welcome */}
-            <div className="text-center space-y-4">
-              <h3 className="text-3xl font-bold">Approver Dashboard - CEA</h3>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Automated governance checks, bulk remediation capabilities, and intelligent prioritization for maximum efficiency.
-              </p>
-            </div>
-
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card className="border-l-4 border-l-warning">
@@ -145,15 +145,6 @@ const Index = () => {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* Producer Welcome */}
-            <div className="text-center space-y-4">
-              <h3 className="text-3xl font-bold">Data Producer Portal - CEA</h3>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Crystal-clear transparency with real-time status updates, clear SLA tracking, 
-                and action-oriented feedback. Never chase approvals again.
-              </p>
-            </div>
-
             {/* Producer Tabs */}
             <Tabs defaultValue="dashboard" className="space-y-6">
               <TabsList className="grid grid-cols-2 w-fit">
