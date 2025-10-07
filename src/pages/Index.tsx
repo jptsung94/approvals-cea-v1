@@ -9,7 +9,7 @@ import { AutoApprovalRules } from "@/components/AutoApprovalRules"
 import { ProducerDashboard } from "@/components/ProducerDashboard"
 import { NotificationCenter } from "@/components/NotificationCenter"
 import { Shield, Database, Zap, Users, BarChart3, CheckCircle, Clock, Settings } from "lucide-react"
-import logo from "@/assets/logo.jpeg"
+import logo from "@/assets/logo-greyscale.png"
 
 const Index = () => {
   const [userRole, setUserRole] = useState<'steward' | 'producer'>('steward')
@@ -66,8 +66,7 @@ const Index = () => {
             <div className="text-center space-y-4">
               <h3 className="text-3xl font-bold">Approver Dashboard - CEA</h3>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Streamlined, asset-agnostic approval experience with automated governance checks, 
-                bulk remediation capabilities, and intelligent prioritization for maximum efficiency.
+                Automated governance checks, bulk remediation capabilities, and intelligent prioritization for maximum efficiency.
               </p>
             </div>
 
