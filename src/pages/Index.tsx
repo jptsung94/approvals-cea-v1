@@ -25,32 +25,17 @@ const Index = () => {
               <h1 className="text-xl font-bold">MyApprovals Dashboard</h1>
             </div>
             
-            <div className="flex flex-col items-end space-y-2">
-              <div className="flex items-center space-x-4">
-                <Button variant="ghost" size="sm">
-                  Help
-                </Button>
-                <NotificationCenter />
-                <Button variant="ghost" size="sm">
-                  Dashboard
-                </Button>
-                <Button variant="ghost" size="sm">
-                  Profile
-                </Button>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Badge variant={userRole === 'steward' ? 'default' : 'secondary'}>
-                  <Shield className="h-3 w-3 mr-1" />
-                  {userRole === 'steward' ? 'Asset Approver' : 'Data Producer'}
-                </Badge>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setUserRole(userRole === 'steward' ? 'producer' : 'steward')}
-                >
-                  Switch Role
-                </Button>
-              </div>
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" size="sm">
+                Help
+              </Button>
+              <NotificationCenter />
+              <Button variant="ghost" size="sm">
+                Dashboard
+              </Button>
+              <Button variant="ghost" size="sm">
+                Profile
+              </Button>
             </div>
           </div>
         </div>
@@ -59,9 +44,24 @@ const Index = () => {
       {/* Page Title */}
       <section className="border-b bg-card">
         <div className="container mx-auto px-6 py-6">
-          <h1 className="text-3xl font-bold">
-            {userRole === 'steward' ? 'Approver Dashboard' : 'Producer Dashboard'}
-          </h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold">
+              {userRole === 'steward' ? 'Approver Dashboard' : 'Producer Dashboard'}
+            </h1>
+            <div className="flex items-center space-x-2">
+              <Badge variant={userRole === 'steward' ? 'default' : 'secondary'}>
+                <Shield className="h-3 w-3 mr-1" />
+                {userRole === 'steward' ? 'Asset Approver' : 'Data Producer'}
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setUserRole(userRole === 'steward' ? 'producer' : 'steward')}
+              >
+                Switch Role
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
 
