@@ -237,6 +237,10 @@ export function ApprovalDashboard() {
     requestType: 'all',
     approvalMethod: 'all'
   })
+  const [isTeamSummaryOpen, setIsTeamSummaryOpen] = useState(() => {
+    const saved = localStorage.getItem('teamSummaryOpen')
+    return saved ? JSON.parse(saved) : false
+  })
   const { toast } = useToast()
   const ITEMS_PER_PAGE = 10
 
@@ -726,8 +730,43 @@ export function ApprovalDashboard() {
         onClearSelection={() => setSelectedIds(new Set())}
       />
 
-      {/* Pending Approvals Summary */}
-      <PendingApprovalsSummary items={pendingApprovalsSummary} />
+      {/* Team Workload Summary - Collapsible */}
+      <Collapsible
+        open={isTeamSummaryOpen}
+        onOpenChange={(open) => {
+          setIsTeamSummaryOpen(open)
+          localStorage.setItem('teamSummaryOpen', JSON.stringify(open))
+        }}
+        className="space-y-2"
+      >
+        <Card>
+          <CardHeader className="pb-3">
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex w-full justify-between p-0 hover:bg-transparent"
+              >
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-medium text-muted-foreground">Team Workload Summary</h3>
+                  <Badge variant="secondary" className="text-xs">
+                    {pendingApprovalsSummary.length} reviewers
+                  </Badge>
+                </div>
+                {isTeamSummaryOpen ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="pt-0">
+              <PendingApprovalsSummary items={pendingApprovalsSummary} className="shadow-none border-0" />
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       {/* Failed Auto-Approvals - Error Recovery */}
       {submissions.filter(s => failedAutoApprovals.has(s.id)).map(submission => (
