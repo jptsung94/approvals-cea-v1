@@ -25,21 +25,20 @@ const Index = () => {
               <h1 className="text-xl font-bold">MyApprovals Dashboard</h1>
             </div>
             
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                <HelpCircle className="h-4 w-4" />
-                Help
-              </Button>
-              <NotificationCenter />
-              <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                <LayoutDashboard className="h-4 w-4" />
-                Dashboard
-              </Button>
-              <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Profile
-              </Button>
-              <div className="flex items-center space-x-2 border-l pl-4">
+            <div className="flex flex-col items-end space-y-2">
+              <div className="flex items-center space-x-4">
+                <Button variant="ghost" size="sm">
+                  Help
+                </Button>
+                <NotificationCenter />
+                <Button variant="ghost" size="sm">
+                  Dashboard
+                </Button>
+                <Button variant="ghost" size="sm">
+                  Profile
+                </Button>
+              </div>
+              <div className="flex items-center space-x-2">
                 <Badge variant={userRole === 'steward' ? 'default' : 'secondary'}>
                   <Shield className="h-3 w-3 mr-1" />
                   {userRole === 'steward' ? 'Asset Approver' : 'Data Producer'}
