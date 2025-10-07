@@ -7,8 +7,12 @@ import { Search, X } from "lucide-react"
 export interface FilterState {
   search: string
   status: string
-  requestType: string
-  approvalMethod: string
+  assetType: string
+  subType: string
+  reviewer: string
+  phase: string
+  action: string
+  classification: string
 }
 
 interface ApprovalFiltersProps {
@@ -26,8 +30,12 @@ export function ApprovalFilters({ filters, onFilterChange, resultCount }: Approv
     onFilterChange({
       search: '',
       status: 'all',
-      requestType: 'all',
-      approvalMethod: 'all'
+      assetType: 'all',
+      subType: 'all',
+      reviewer: 'all',
+      phase: 'all',
+      action: 'all',
+      classification: 'all'
     })
   }
 
@@ -51,42 +59,90 @@ export function ApprovalFilters({ filters, onFilterChange, resultCount }: Approv
       {/* Filter Controls */}
       <div className="flex flex-wrap gap-3 items-center">
         <Select value={filters.status} onValueChange={(v) => updateFilter('status', v)}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="open">Open</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="under_review">Under Review</SelectItem>
-            <SelectItem value="approved">Approved</SelectItem>
-            <SelectItem value="rejected">Rejected</SelectItem>
+            <SelectItem value="pending">Needs Review</SelectItem>
+            <SelectItem value="under_review">In Progress</SelectItem>
+            <SelectItem value="approved">Completed</SelectItem>
+            <SelectItem value="rejected">Needs Escalation</SelectItem>
           </SelectContent>
         </Select>
 
-        <Select value={filters.requestType} onValueChange={(v) => updateFilter('requestType', v)}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Request Type" />
+        <Select value={filters.assetType} onValueChange={(v) => updateFilter('assetType', v)}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Asset Type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Request Types</SelectItem>
-            <SelectItem value="registration">Registration</SelectItem>
-            <SelectItem value="metadata_change">Metadata Change</SelectItem>
-            <SelectItem value="schema_update">Schema Update</SelectItem>
-            <SelectItem value="delete">Delete</SelectItem>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="Dataset">Dataset</SelectItem>
+            <SelectItem value="API">API</SelectItem>
+            <SelectItem value="Data Share">Data Share</SelectItem>
+            <SelectItem value="Report">Report</SelectItem>
           </SelectContent>
         </Select>
 
-        <Select value={filters.approvalMethod} onValueChange={(v) => updateFilter('approvalMethod', v)}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Approval Method" />
+        <Select value={filters.subType} onValueChange={(v) => updateFilter('subType', v)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Sub-Type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Methods</SelectItem>
-            <SelectItem value="auto_eligible">Auto-Approval Eligible</SelectItem>
-            <SelectItem value="policy_based">Policy-Based</SelectItem>
-            <SelectItem value="manual">Manual Review</SelectItem>
-            <SelectItem value="bulk_candidates">Bulk Candidates</SelectItem>
+            <SelectItem value="all">All Sub-Types</SelectItem>
+            <SelectItem value="new">New</SelectItem>
+            <SelectItem value="new_minor_version">New Minor Version</SelectItem>
+            <SelectItem value="new_major_version">New Major Version</SelectItem>
+            <SelectItem value="deprecated">Deprecated</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={filters.reviewer} onValueChange={(v) => updateFilter('reviewer', v)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Reviewer" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Reviewers</SelectItem>
+            <SelectItem value="Kelly Schwartz">Kelly Schwartz</SelectItem>
+            <SelectItem value="API Coach">API Coach</SelectItem>
+            <SelectItem value="Alex Thompson">Alex Thompson</SelectItem>
+            <SelectItem value="David Rodriguez">David Rodriguez</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={filters.phase} onValueChange={(v) => updateFilter('phase', v)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Phase" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Phases</SelectItem>
+            <SelectItem value="peer_review">Peer Review</SelectItem>
+            <SelectItem value="governance_committee">Governance Committee</SelectItem>
+            <SelectItem value="security_review">Security Review</SelectItem>
+            <SelectItem value="compliance_review">Compliance Review</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={filters.action} onValueChange={(v) => updateFilter('action', v)}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Action" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Actions</SelectItem>
+            <SelectItem value="review">Review</SelectItem>
+            <SelectItem value="view">View</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={filters.classification} onValueChange={(v) => updateFilter('classification', v)}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Classification" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Classifications</SelectItem>
+            <SelectItem value="protected">Protected</SelectItem>
+            <SelectItem value="common">Common</SelectItem>
+            <SelectItem value="private">Private</SelectItem>
           </SelectContent>
         </Select>
 

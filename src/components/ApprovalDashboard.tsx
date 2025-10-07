@@ -32,11 +32,17 @@ interface AssetSubmission {
   id: string
   name: string
   type: string
+  subType: 'new' | 'new_minor_version' | 'new_major_version' | 'deprecated'
   producer: string
   submittedAt: string
+  lastUpdated: string
   status: AssetStatus
   description: string
   category: string
+  classification: 'protected' | 'common' | 'private'
+  reviewerName: string
+  phase: 'peer_review' | 'governance_committee' | 'security_review' | 'compliance_review'
+  action: 'review' | 'view'
   metadata: Record<string, any>
   comments: Comment[]
   priority: 'low' | 'medium' | 'high'
@@ -66,9 +72,15 @@ const mockSubmissions: AssetSubmission[] = [
     id: '1',
     name: 'Customer Transaction Dataset',
     type: 'Dataset',
+    subType: 'new',
     producer: 'David Stevens',
     submittedAt: '2024-01-15T10:30:00Z',
+    lastUpdated: '2024-01-15T14:20:00Z',
     status: 'pending',
+    classification: 'protected',
+    reviewerName: 'Kelly Schwartz',
+    phase: 'governance_committee',
+    action: 'review',
     description: 'Daily customer transaction data for analytics - Q4 2024',
     category: 'Financial Data',
     metadata: {
@@ -91,9 +103,15 @@ const mockSubmissions: AssetSubmission[] = [
     id: '2', 
     name: 'Product Catalog API v2.1',
     type: 'API',
+    subType: 'new_minor_version',
     producer: 'Alexander Ekubo',
     submittedAt: '2024-01-14T15:45:00Z',
+    lastUpdated: '2024-01-15T09:10:00Z',
     status: 'under_review',
+    classification: 'common',
+    reviewerName: 'API Coach',
+    phase: 'peer_review',
+    action: 'review',
     description: 'RESTful API for product information with enhanced filtering capabilities',
     category: 'Product Data',
     metadata: {
@@ -123,9 +141,15 @@ const mockSubmissions: AssetSubmission[] = [
     id: '3',
     name: 'Marketing Campaign Data Share',
     type: 'Data Share',
+    subType: 'new',
     producer: 'Mike Chen',
     submittedAt: '2024-01-13T08:20:00Z',
+    lastUpdated: '2024-01-13T10:15:00Z',
     status: 'approved',
+    classification: 'common',
+    reviewerName: 'Alex Thompson',
+    phase: 'governance_committee',
+    action: 'view',
     description: 'Campaign performance metrics for Q4 2024 cross-LOB sharing',
     category: 'Marketing Data',
     metadata: {
@@ -155,9 +179,15 @@ const mockSubmissions: AssetSubmission[] = [
     id: '4',
     name: 'Security Event Logs Dataset',
     type: 'Dataset',
+    subType: 'new_major_version',
     producer: 'Lisa Wang',
     submittedAt: '2024-01-12T08:20:00Z',
+    lastUpdated: '2024-01-12T14:20:00Z',
     status: 'rejected',
+    classification: 'private',
+    reviewerName: 'David Rodriguez',
+    phase: 'security_review',
+    action: 'review',
     description: 'Security event monitoring logs with PII data',
     category: 'Security Data',
     metadata: {
@@ -187,9 +217,15 @@ const mockSubmissions: AssetSubmission[] = [
     id: '5',
     name: 'User Analytics Dashboard API',
     type: 'API',
+    subType: 'new',
     producer: 'Tom Wilson',
     submittedAt: '2024-01-16T10:00:00Z',
+    lastUpdated: '2024-01-16T10:00:00Z',
     status: 'pending',
+    classification: 'common',
+    reviewerName: 'Kelly Schwartz',
+    phase: 'compliance_review',
+    action: 'review',
     description: 'API for user behavior analytics dashboard - auto-generated from dataset',
     category: 'Analytics Data',
     metadata: {
@@ -229,13 +265,17 @@ export function ApprovalDashboard() {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
   const [failedAutoApprovals, setFailedAutoApprovals] = useState<Set<string>>(new Set())
   const [currentPage, setCurrentPage] = useState(1)
-  const [sortColumn, setSortColumn] = useState<'name' | 'submittedAt' | 'priority'>('submittedAt')
+  const [sortColumn, setSortColumn] = useState<'name' | 'submittedAt' | 'lastUpdated' | 'priority' | 'type' | 'reviewerName' | 'phase'>('lastUpdated')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     status: 'all',
-    requestType: 'all',
-    approvalMethod: 'all'
+    assetType: 'all',
+    subType: 'all',
+    reviewer: 'all',
+    phase: 'all',
+    action: 'all',
+    classification: 'all'
   })
   const [isTeamSummaryOpen, setIsTeamSummaryOpen] = useState(() => {
     const saved = localStorage.getItem('teamSummaryOpen')
@@ -576,20 +616,34 @@ export function ApprovalDashboard() {
         }
       }
 
-      // Request type filter (simplified for demo)
-      if (filters.requestType !== 'all') {
-        // In real implementation, this would check actual request type
-        return true
+      // Asset type filter
+      if (filters.assetType !== 'all' && submission.type !== filters.assetType) {
+        return false
       }
 
-      // Approval method filter
-      if (filters.approvalMethod !== 'all') {
-        if (filters.approvalMethod === 'auto_eligible' && !submission.autoApprovalEligible) {
-          return false
-        }
-        if (filters.approvalMethod === 'bulk_candidates' && submission.priority !== 'low') {
-          return false
-        }
+      // Sub-type filter
+      if (filters.subType !== 'all' && submission.subType !== filters.subType) {
+        return false
+      }
+
+      // Reviewer filter
+      if (filters.reviewer !== 'all' && submission.reviewerName !== filters.reviewer) {
+        return false
+      }
+
+      // Phase filter
+      if (filters.phase !== 'all' && submission.phase !== filters.phase) {
+        return false
+      }
+
+      // Action filter
+      if (filters.action !== 'all' && submission.action !== filters.action) {
+        return false
+      }
+
+      // Classification filter
+      if (filters.classification !== 'all' && submission.classification !== filters.classification) {
+        return false
       }
 
       return true
@@ -603,9 +657,17 @@ export function ApprovalDashboard() {
         compareValue = a.name.localeCompare(b.name)
       } else if (sortColumn === 'submittedAt') {
         compareValue = new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime()
+      } else if (sortColumn === 'lastUpdated') {
+        compareValue = new Date(a.lastUpdated).getTime() - new Date(b.lastUpdated).getTime()
       } else if (sortColumn === 'priority') {
         const priorityOrder = { high: 3, medium: 2, low: 1 }
         compareValue = priorityOrder[a.priority] - priorityOrder[b.priority]
+      } else if (sortColumn === 'type') {
+        compareValue = a.type.localeCompare(b.type)
+      } else if (sortColumn === 'reviewerName') {
+        compareValue = a.reviewerName.localeCompare(b.reviewerName)
+      } else if (sortColumn === 'phase') {
+        compareValue = a.phase.localeCompare(b.phase)
       }
       
       return sortDirection === 'asc' ? compareValue : -compareValue
@@ -793,12 +855,22 @@ export function ApprovalDashboard() {
           <div className="flex items-center justify-between">
             <CardTitle>Prioritized Review Queue - SLA Tracked</CardTitle>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="text-muted-foreground">Sort by:</span>
                 <Button variant="ghost" size="sm" onClick={() => handleSort('name')} className="gap-1">
                   Name {sortColumn === 'name' && <ArrowUpDown className="h-3 w-3" />}
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleSort('submittedAt')} className="gap-1">
-                  Date {sortColumn === 'submittedAt' && <ArrowUpDown className="h-3 w-3" />}
+                <Button variant="ghost" size="sm" onClick={() => handleSort('type')} className="gap-1">
+                  Type {sortColumn === 'type' && <ArrowUpDown className="h-3 w-3" />}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleSort('reviewerName')} className="gap-1">
+                  Reviewer {sortColumn === 'reviewerName' && <ArrowUpDown className="h-3 w-3" />}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleSort('phase')} className="gap-1">
+                  Phase {sortColumn === 'phase' && <ArrowUpDown className="h-3 w-3" />}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleSort('lastUpdated')} className="gap-1">
+                  Last Updated {sortColumn === 'lastUpdated' && <ArrowUpDown className="h-3 w-3" />}
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => handleSort('priority')} className="gap-1">
                   Priority {sortColumn === 'priority' && <ArrowUpDown className="h-3 w-3" />}
