@@ -683,10 +683,17 @@ export function ApprovalDashboard() {
     currentPage * ITEMS_PER_PAGE
   )
 
-  const pendingCount = submissions.filter(s => s.status === 'pending').length
-  const reviewingCount = submissions.filter(s => s.status === 'under_review').length
-  const highPriorityCount = submissions.filter(s => s.priority === 'high' && s.status === 'pending').length
-  const autoApprovalEligibleCount = submissions.filter(s => s.autoApprovalEligible && s.status === 'pending').length
+  // Calculate metrics from FILTERED submissions to match what user sees
+  const pendingCount = filteredSubmissions.filter(s => s.status === 'pending').length
+  const reviewingCount = filteredSubmissions.filter(s => s.status === 'under_review').length
+  const highPriorityCount = filteredSubmissions.filter(s => s.priority === 'high' && s.status === 'pending').length
+  const autoApprovalEligibleCount = filteredSubmissions.filter(s => s.autoApprovalEligible && s.status === 'pending').length
+  
+  // Check if filters are active (any filter is not at default)
+  const hasActiveFilters = filters.search !== '' || filters.status !== 'all' || 
+    filters.assetType !== 'all' || filters.subType !== 'all' || 
+    filters.reviewer !== 'all' || filters.phase !== 'all' || 
+    filters.action !== 'all' || filters.classification !== 'all'
 
   return (
     <div className="space-y-6">
@@ -699,73 +706,11 @@ export function ApprovalDashboard() {
         <NotificationCenter />
       </div>
 
-      {/* Priority Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card className="border-warning/20 bg-warning/5">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Clock className="h-5 w-5 text-warning" />
-              <div>
-                <p className="text-2xl font-bold">{pendingCount}</p>
-                <p className="text-sm text-muted-foreground">Pending Review</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-destructive/20 bg-destructive/5">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <XCircle className="h-5 w-5 text-destructive" />
-              <div>
-                <p className="text-2xl font-bold">{highPriorityCount}</p>
-                <p className="text-sm text-muted-foreground">High Priority</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Eye className="h-5 w-5 text-primary" />
-              <div>
-                <p className="text-2xl font-bold">{reviewingCount}</p>
-                <p className="text-sm text-muted-foreground">Under Review</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-success/20 bg-success/5">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="h-5 w-5 text-success" />
-              <div>
-                <p className="text-2xl font-bold">{autoApprovalEligibleCount}</p>
-                <p className="text-sm text-muted-foreground">Auto-Eligible</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <BarChart3 className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-2xl font-bold">87%</p>
-                <p className="text-sm text-muted-foreground">Approval Rate</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters and Settings */}
+      {/* Filters, Metrics, and Settings - All Consolidated */}
       <Card>
         <CardContent className="pt-6">
-          <div className="space-y-4">
+          <div className="space-y-6">
+            {/* Filters */}
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <ApprovalFilters
@@ -775,7 +720,78 @@ export function ApprovalDashboard() {
                 />
               </div>
             </div>
+
+            {/* Metrics Grid - Reflects filtered results */}
+            <div>
+              {hasActiveFilters && (
+                <p className="text-xs text-muted-foreground mb-3">
+                  Showing metrics for filtered results ({filteredSubmissions.length} of {submissions.length} total)
+                </p>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                <Card className="border-warning/20 bg-warning/5">
+                  <CardContent className="p-3">
+                    <div className="flex items-center space-x-2">
+                      <Clock className="h-4 w-4 text-warning" />
+                      <div>
+                        <p className="text-xl font-bold">{pendingCount}</p>
+                        <p className="text-xs text-muted-foreground">Pending Review</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="border-destructive/20 bg-destructive/5">
+                  <CardContent className="p-3">
+                    <div className="flex items-center space-x-2">
+                      <XCircle className="h-4 w-4 text-destructive" />
+                      <div>
+                        <p className="text-xl font-bold">{highPriorityCount}</p>
+                        <p className="text-xs text-muted-foreground">High Priority</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardContent className="p-3">
+                    <div className="flex items-center space-x-2">
+                      <Eye className="h-4 w-4 text-primary" />
+                      <div>
+                        <p className="text-xl font-bold">{reviewingCount}</p>
+                        <p className="text-xs text-muted-foreground">Under Review</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-success/20 bg-success/5">
+                  <CardContent className="p-3">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-success" />
+                      <div>
+                        <p className="text-xl font-bold">{autoApprovalEligibleCount}</p>
+                        <p className="text-xs text-muted-foreground">Auto-Eligible</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-3">
+                    <div className="flex items-center space-x-2">
+                      <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-xl font-bold">87%</p>
+                        <p className="text-xs text-muted-foreground">Approval Rate</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
             
+            {/* Settings */}
             <div className="flex gap-2">
               <DelegateManagement />
               <RulesConfiguration />
