@@ -78,7 +78,7 @@ const mockSubmissions: AssetSubmission[] = [
     lastUpdated: '2024-01-15T14:20:00Z',
     status: 'pending',
     classification: 'protected',
-    reviewerName: 'Kelly Schwartz',
+    reviewerName: 'Rajan Ayakkad',
     phase: 'governance_committee',
     action: 'review',
     description: 'Daily customer transaction data for analytics - Q4 2024',
@@ -88,7 +88,7 @@ const mockSubmissions: AssetSubmission[] = [
       size: '2.5 GB',
       sensitivity: 'Confidential',
       recordCount: 1250000,
-      approvers: ['Kelly Schwartz (COE)', 'Rakesh Sharma (PDS)', 'Samar Sharma (AE)'],
+      approvers: ['Rajan Ayakkad (COE)', 'Steve Wong (PDS)', 'Vivek Saroagi (AE)'],
       sla: '5 business days',
       currentStep: 'COE Review',
       governanceChecks: '2 of 5 passed',
@@ -109,7 +109,7 @@ const mockSubmissions: AssetSubmission[] = [
     lastUpdated: '2024-01-15T09:10:00Z',
     status: 'under_review',
     classification: 'common',
-    reviewerName: 'API Coach',
+    reviewerName: 'Steve Wong',
     phase: 'peer_review',
     action: 'review',
     description: 'RESTful API for product information with enhanced filtering capabilities',
@@ -118,7 +118,7 @@ const mockSubmissions: AssetSubmission[] = [
       endpoints: 12,
       version: 'v2.1',
       sensitivity: 'Internal',
-      approvers: ['Kelly Schwartz (COE)', 'API Coach (LOB)'],
+      approvers: ['Rajan Ayakkad (COE)', 'Steve Wong (LOB)'],
       sla: '3 business days',
       currentStep: 'LOB API Coach Review',
       governanceChecks: '4 of 5 passed',
@@ -127,7 +127,7 @@ const mockSubmissions: AssetSubmission[] = [
     comments: [
       {
         id: 'c1',
-        author: 'Kelly Schwartz',
+        author: 'Rajan Ayakkad',
         message: 'COE Review Complete: Authentication documentation approved. Automated standardization check passed for 95% of endpoints.',
         timestamp: '2024-01-14T15:30:00Z',
         type: 'approval'
@@ -147,7 +147,7 @@ const mockSubmissions: AssetSubmission[] = [
     lastUpdated: '2024-01-13T10:15:00Z',
     status: 'approved',
     classification: 'common',
-    reviewerName: 'Alex Thompson',
+    reviewerName: 'Dan Mattson',
     phase: 'governance_committee',
     action: 'view',
     description: 'Campaign performance metrics for Q4 2024 cross-LOB sharing',
@@ -165,7 +165,7 @@ const mockSubmissions: AssetSubmission[] = [
     comments: [
       {
         id: 'c2',
-        author: 'Alex Thompson',
+        author: 'Dan Mattson',
         message: 'Bulk approved with 12 other similar marketing data shares. Standard governance terms applied automatically.',
         timestamp: '2024-01-13T10:15:00Z',
         type: 'approval'
@@ -185,7 +185,7 @@ const mockSubmissions: AssetSubmission[] = [
     lastUpdated: '2024-01-12T14:20:00Z',
     status: 'rejected',
     classification: 'private',
-    reviewerName: 'David Rodriguez',
+    reviewerName: 'Granger',
     phase: 'security_review',
     action: 'review',
     description: 'Security event monitoring logs with PII data',
@@ -195,7 +195,7 @@ const mockSubmissions: AssetSubmission[] = [
       size: '15.2 GB',
       sensitivity: 'Highly Confidential',
       recordCount: 5000000,
-      approvers: ['Kelly Schwartz (COE)', 'Security PDS', 'DDRO', 'AE'],
+      approvers: ['Granger (COE)', 'Security PDS', 'DDRO', 'AE'],
       sla: '7 business days',
       currentStep: 'Rejected - PII Remediation Required',
       governanceChecks: '1 of 5 passed'
@@ -203,7 +203,7 @@ const mockSubmissions: AssetSubmission[] = [
     comments: [
       {
         id: 'c3',
-        author: 'David Rodriguez',
+        author: 'Granger',
         message: 'Governance Engine flagged: PII masking required for fields [user_id, email, phone]. Use CEA Governance Engine for real-time validation before resubmission.',
         timestamp: '2024-01-12T14:20:00Z',
         type: 'feedback'
@@ -223,7 +223,7 @@ const mockSubmissions: AssetSubmission[] = [
     lastUpdated: '2024-01-16T10:00:00Z',
     status: 'pending',
     classification: 'common',
-    reviewerName: 'Kelly Schwartz',
+    reviewerName: 'Ryan',
     phase: 'compliance_review',
     action: 'review',
     description: 'API for user behavior analytics dashboard - auto-generated from dataset',
@@ -232,7 +232,7 @@ const mockSubmissions: AssetSubmission[] = [
       endpoints: 8,
       version: 'v1.0',
       sensitivity: 'Internal',
-      approvers: ['Kelly Schwartz (COE)'],
+      approvers: ['Ryan (COE)'],
       sla: '3 business days',
       currentStep: 'Governance Engine Validation',
       governanceChecks: 'Auto-validation in progress',
@@ -729,7 +729,10 @@ export function ApprovalDashboard() {
                 </p>
               )}
               <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                <Card className="border-warning/20 bg-warning/5">
+                <Card 
+                  className="border-warning/20 bg-warning/5 cursor-pointer hover:bg-warning/10 transition-colors"
+                  onClick={() => setFilters({ ...filters, status: 'pending' })}
+                >
                   <CardContent className="p-3">
                     <div className="flex items-center space-x-2">
                       <Clock className="h-4 w-4 text-warning" />
@@ -741,7 +744,10 @@ export function ApprovalDashboard() {
                   </CardContent>
                 </Card>
                 
-                <Card className="border-destructive/20 bg-destructive/5">
+                <Card 
+                  className="border-destructive/20 bg-destructive/5 cursor-pointer hover:bg-destructive/10 transition-colors"
+                  onClick={() => setFilters({ ...filters, status: 'pending' })}
+                >
                   <CardContent className="p-3">
                     <div className="flex items-center space-x-2">
                       <XCircle className="h-4 w-4 text-destructive" />
@@ -753,7 +759,10 @@ export function ApprovalDashboard() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-primary/20 bg-primary/5">
+                <Card 
+                  className="border-primary/20 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors"
+                  onClick={() => setFilters({ ...filters, status: 'under_review' })}
+                >
                   <CardContent className="p-3">
                     <div className="flex items-center space-x-2">
                       <Eye className="h-4 w-4 text-primary" />
@@ -765,7 +774,10 @@ export function ApprovalDashboard() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-success/20 bg-success/5">
+                <Card 
+                  className="border-success/20 bg-success/5 cursor-pointer hover:bg-success/10 transition-colors"
+                  onClick={() => setFilters({ ...filters, status: 'pending' })}
+                >
                   <CardContent className="p-3">
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="h-4 w-4 text-success" />
@@ -777,7 +789,7 @@ export function ApprovalDashboard() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="border-muted/20">
                   <CardContent className="p-3">
                     <div className="flex items-center space-x-2">
                       <BarChart3 className="h-4 w-4 text-muted-foreground" />

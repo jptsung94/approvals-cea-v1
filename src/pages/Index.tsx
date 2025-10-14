@@ -21,7 +21,7 @@ const Index = () => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <img src={logo} alt="Exchange Logo" className="h-10 w-10 object-contain" />
+              <img src={logo} alt="Exchange Logo" className="h-10 w-10 object-contain opacity-70" />
               <h1 className="text-xl font-bold">MyApprovals Dashboard</h1>
             </div>
             

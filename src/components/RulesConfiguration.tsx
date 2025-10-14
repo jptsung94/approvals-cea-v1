@@ -37,15 +37,60 @@ const mockRules: Rule[] = [
   },
   {
     id: '3',
-    name: 'PII Masking Required',
-    description: 'Datasets with PII must have masking applied',
-    type: 'security',
+    name: 'Data Quality Score Threshold',
+    description: 'Datasets must meet minimum quality standards before approval',
+    type: 'quality',
     status: 'active',
-    appliesTo: ['Dataset', 'Data Share'],
-    criteria: 'PII Detected = True REQUIRES Masking = Applied'
+    appliesTo: ['Dataset'],
+    criteria: 'Quality Score ≥ 85% AND (Completeness > 95% OR Manual Override = True) AND Schema Validation = Passed'
   },
   {
     id: '4',
+    name: 'Schema Consistency Check',
+    description: 'Verify data types and field naming conventions match enterprise standards',
+    type: 'quality',
+    status: 'active',
+    appliesTo: ['Dataset', 'API'],
+    criteria: 'Field Naming = CamelCase OR snake_case AND Data Types Match Schema Registry AND No Orphaned Fields'
+  },
+  {
+    id: '5',
+    name: 'Data Freshness Requirements',
+    description: 'Time-sensitive datasets must meet freshness SLAs',
+    type: 'quality',
+    status: 'active',
+    appliesTo: ['Dataset', 'Data Share'],
+    criteria: 'Last Updated < 24 hours (Real-time) OR < 7 days (Batch) AND Refresh Schedule = Documented'
+  },
+  {
+    id: '6',
+    name: 'PII Masking Required',
+    description: 'Datasets with PII must have masking applied before approval',
+    type: 'security',
+    status: 'active',
+    appliesTo: ['Dataset', 'Data Share'],
+    criteria: 'PII Detected = True REQUIRES (Masking = Applied OR Encryption = AES-256) AND Access Log = Enabled'
+  },
+  {
+    id: '7',
+    name: 'Encryption at Rest',
+    description: 'All protected and private classification data must be encrypted',
+    type: 'security',
+    status: 'active',
+    appliesTo: ['Dataset', 'Data Share', 'API'],
+    criteria: '(Classification = Protected OR Private) REQUIRES Encryption = Enabled AND Key Management = Centralized'
+  },
+  {
+    id: '8',
+    name: 'Access Control Validation',
+    description: 'Security review for role-based access controls and authentication',
+    type: 'security',
+    status: 'active',
+    appliesTo: ['API', 'Dataset', 'Data Share'],
+    criteria: 'RBAC = Configured AND (OAuth 2.0 OR SAML) AND Audit Logging = Enabled AND Max Session Duration ≤ 8 hours'
+  },
+  {
+    id: '9',
     name: 'Bulk Approval - Marketing Data',
     description: 'Marketing data shares with standard governance terms',
     type: 'policy',

@@ -24,7 +24,61 @@ interface Notification {
 }
 
 export function NotificationCenter() {
-  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [notifications, setNotifications] = useState<Notification[]>([
+    {
+      id: '1',
+      type: 'approval_request',
+      title: 'New Approval Request',
+      message: 'Customer Transaction Dataset requires your review',
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      read: false,
+      assetId: '1'
+    },
+    {
+      id: '2',
+      type: 'comment',
+      title: 'New Comment',
+      message: 'Rajan Ayakkad commented on Product Catalog API v2.1',
+      timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+      read: false,
+      assetId: '2'
+    },
+    {
+      id: '3',
+      type: 'status_change',
+      title: 'Status Changed',
+      message: 'Marketing Campaign Data Share has been approved',
+      timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+      read: false,
+      assetId: '3'
+    },
+    {
+      id: '4',
+      type: 'escalation',
+      title: 'SLA Warning',
+      message: 'Security Event Logs Dataset is approaching SLA deadline (1 day remaining)',
+      timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      assetId: '4'
+    },
+    {
+      id: '5',
+      type: 'delegate_action',
+      title: 'Delegate Assignment',
+      message: 'Steve Wong has been assigned as your delegate for this week',
+      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      read: true
+    },
+    {
+      id: '6',
+      type: 'comment',
+      title: 'Revision Requested',
+      message: 'Granger requested revisions on Security Event Logs Dataset',
+      timestamp: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      assetId: '4'
+    }
+  ])
   const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
