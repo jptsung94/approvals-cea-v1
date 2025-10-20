@@ -6,9 +6,6 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MessageSquare, Clock, User } from "lucide-react"
-import { commentSchema } from "@/lib/validation"
-import { z } from "zod"
-import { useToast } from "@/hooks/use-toast"
 
 interface Comment {
   id: string
@@ -29,26 +26,11 @@ interface DiscussionPanelProps {
 export function DiscussionPanel({ assetId, comments, currentPhase, onAddComment }: DiscussionPanelProps) {
   const [newComment, setNewComment] = useState('')
   const [filterPhase, setFilterPhase] = useState<string>('all')
-  const [validationError, setValidationError] = useState<string>('')
-  const { toast } = useToast()
 
   const handleAddComment = () => {
-    try {
-      commentSchema.parse({ message: newComment })
-      setValidationError('')
-      onAddComment(assetId, newComment, currentPhase)
-      setNewComment('')
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const errorMessage = error.errors[0].message
-        setValidationError(errorMessage)
-        toast({
-          variant: "destructive",
-          title: "Invalid comment",
-          description: errorMessage,
-        })
-      }
-    }
+    if (!newComment.trim()) return
+    onAddComment(assetId, newComment, currentPhase)
+    setNewComment('')
   }
 
   const filteredComments = filterPhase === 'all' 
@@ -142,16 +124,9 @@ export function DiscussionPanel({ assetId, comments, currentPhase, onAddComment 
             <Textarea
               placeholder={`Add comment for ${currentPhase} phase...`}
               value={newComment}
-              onChange={(e) => {
-                setNewComment(e.target.value)
-                setValidationError('')
-              }}
-              className={`min-h-[80px] ${validationError ? 'border-destructive' : ''}`}
-              maxLength={2000}
+              onChange={(e) => setNewComment(e.target.value)}
+              className="min-h-[80px]"
             />
-            {validationError && (
-              <p className="text-sm text-destructive">{validationError}</p>
-            )}
             <Button
               onClick={handleAddComment}
               disabled={!newComment.trim()}

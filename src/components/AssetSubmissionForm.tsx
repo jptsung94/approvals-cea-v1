@@ -13,8 +13,6 @@ import { Upload, FileText, Database, BarChart3, Clock, CheckCircle, AlertCircle 
 import { useToast } from "@/hooks/use-toast"
 import { ApproverSuggestions } from "./ApproverSuggestions"
 import { ApproverFavorites } from "./ApproverFavorites"
-import { assetSubmissionSchema } from "@/lib/validation"
-import { z } from "zod"
 
 type AssetType = 'dataset' | 'api' | 'stream' | 'model'
 
@@ -76,7 +74,6 @@ const categories = [
 export function AssetSubmissionForm() {
   const [currentStep, setCurrentStep] = useState(1)
   const [selectedApprovers, setSelectedApprovers] = useState<string[]>([])
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
   const [formData, setFormData] = useState<SubmissionData>({
     name: '',
     type: 'dataset',
@@ -112,49 +109,28 @@ export function AssetSubmissionForm() {
   }
 
   const handleSubmit = () => {
-    // Validate form data
-    try {
-      assetSubmissionSchema.parse(formData)
-      setValidationErrors({})
-      
-      toast({
-        title: "Submission Successful",
-        description: "Your data asset has been submitted for review. You'll receive updates via email.",
-        duration: 5000,
-      })
-      
-      // Reset form
-      setCurrentStep(1)
-      setFormData({
-        name: '',
-        type: 'dataset',
-        description: '',
-        category: '',
-        producer: '',
-        email: '',
-        dataGovernance: {
-          hasPersonalData: false,
-          dataClassification: 'public',
-          retentionPeriod: ''
-        },
-        technicalSpecs: {}
-      })
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const errors: Record<string, string> = {}
-        error.errors.forEach(err => {
-          const path = err.path.join('.')
-          errors[path] = err.message
-        })
-        setValidationErrors(errors)
-        
-        toast({
-          variant: "destructive",
-          title: "Validation Error",
-          description: "Please fix the errors in the form before submitting.",
-        })
-      }
-    }
+    toast({
+      title: "Submission Successful",
+      description: "Your data asset has been submitted for review. You'll receive updates via email.",
+      duration: 5000,
+    })
+    
+    // Reset form
+    setCurrentStep(1)
+    setFormData({
+      name: '',
+      type: 'dataset',
+      description: '',
+      category: '',
+      producer: '',
+      email: '',
+      dataGovernance: {
+        hasPersonalData: false,
+        dataClassification: 'public',
+        retentionPeriod: ''
+      },
+      technicalSpecs: {}
+    })
   }
 
   const steps = [
@@ -253,17 +229,9 @@ export function AssetSubmissionForm() {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => {
-                      updateFormData({ name: e.target.value })
-                      setValidationErrors({ ...validationErrors, name: '' })
-                    }}
+                    onChange={(e) => updateFormData({ name: e.target.value })}
                     placeholder="e.g., Customer Analytics Dataset"
-                    maxLength={100}
-                    className={validationErrors.name ? "border-destructive" : ""}
                   />
-                  {validationErrors.name && (
-                    <p className="text-sm text-destructive mt-1">{validationErrors.name}</p>
-                  )}
                 </div>
                 <div>
                   <Label htmlFor="category">Category</Label>
@@ -285,18 +253,10 @@ export function AssetSubmissionForm() {
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => {
-                    updateFormData({ description: e.target.value })
-                    setValidationErrors({ ...validationErrors, description: '' })
-                  }}
+                  onChange={(e) => updateFormData({ description: e.target.value })}
                   placeholder="Provide a detailed description of your data asset..."
                   rows={4}
-                  maxLength={1000}
-                  className={validationErrors.description ? "border-destructive" : ""}
                 />
-                {validationErrors.description && (
-                  <p className="text-sm text-destructive mt-1">{validationErrors.description}</p>
-                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -305,17 +265,9 @@ export function AssetSubmissionForm() {
                   <Input
                     id="producer"
                     value={formData.producer}
-                    onChange={(e) => {
-                      updateFormData({ producer: e.target.value })
-                      setValidationErrors({ ...validationErrors, producer: '' })
-                    }}
+                    onChange={(e) => updateFormData({ producer: e.target.value })}
                     placeholder="Your organization name"
-                    maxLength={100}
-                    className={validationErrors.producer ? "border-destructive" : ""}
                   />
-                  {validationErrors.producer && (
-                    <p className="text-sm text-destructive mt-1">{validationErrors.producer}</p>
-                  )}
                 </div>
                 <div>
                   <Label htmlFor="email">Contact Email</Label>
@@ -323,17 +275,9 @@ export function AssetSubmissionForm() {
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => {
-                      updateFormData({ email: e.target.value })
-                      setValidationErrors({ ...validationErrors, email: '' })
-                    }}
+                    onChange={(e) => updateFormData({ email: e.target.value })}
                     placeholder="contact@yourorganization.com"
-                    maxLength={255}
-                    className={validationErrors.email ? "border-destructive" : ""}
                   />
-                  {validationErrors.email && (
-                    <p className="text-sm text-destructive mt-1">{validationErrors.email}</p>
-                  )}
                 </div>
               </div>
             </div>
