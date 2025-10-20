@@ -1,6 +1,9 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { supabase } from "@/integrations/supabase/client"
+import type { User, Session } from '@supabase/supabase-js'
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { ApprovalDashboard } from "@/components/ApprovalDashboard"
@@ -8,11 +11,99 @@ import { AssetSubmissionForm } from "@/components/AssetSubmissionForm"
 import { AutoApprovalRules } from "@/components/AutoApprovalRules"
 import { ProducerDashboard } from "@/components/ProducerDashboard"
 import { NotificationCenter } from "@/components/NotificationCenter"
-import { Shield, Database, Zap, Users, BarChart3, CheckCircle, Clock, Settings, HelpCircle, LayoutDashboard, User } from "lucide-react"
+import { Shield, Database, Zap, BarChart3, CheckCircle, Clock, Settings, LogOut } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 import logo from "@/assets/logo-greyscale.png"
 
+type UserRole = 'admin' | 'steward' | 'producer'
+
 const Index = () => {
-  const [userRole, setUserRole] = useState<'steward' | 'producer'>('steward')
+  const navigate = useNavigate()
+  const { toast } = useToast()
+  const [user, setUser] = useState<User | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
+  const [userRoles, setUserRoles] = useState<UserRole[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session)
+        setUser(session?.user ?? null)
+        
+        if (!session) {
+          navigate("/auth")
+        } else {
+          // Fetch user roles after authentication
+          setTimeout(() => {
+            fetchUserRoles(session.user.id)
+          }, 0)
+        }
+      }
+    )
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setUser(session?.user ?? null)
+      
+      if (!session) {
+        navigate("/auth")
+      } else {
+        fetchUserRoles(session.user.id)
+      }
+      setLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [navigate])
+
+  const fetchUserRoles = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+
+    if (error) {
+      console.error('Error fetching user roles:', error)
+      toast({
+        variant: "destructive",
+        title: "Error loading roles",
+        description: "Could not load user roles. Please contact support.",
+      })
+      return
+    }
+
+    if (data && data.length > 0) {
+      setUserRoles(data.map(r => r.role as UserRole))
+    } else {
+      // No roles assigned - default to producer
+      setUserRoles(['producer'])
+    }
+  }
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    navigate("/auth")
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    )
+  }
+
+  if (!user || !session) {
+    return null
+  }
+
+  // Determine primary role for display
+  const primaryRole: 'steward' | 'producer' = userRoles.includes('admin') || userRoles.includes('steward') 
+    ? 'steward' 
+    : 'producer'
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -26,15 +117,10 @@ const Index = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm">
-                Help
-              </Button>
               <NotificationCenter />
-              <Button variant="ghost" size="sm">
-                Dashboard
-              </Button>
-              <Button variant="ghost" size="sm">
-                Profile
+              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
               </Button>
             </div>
           </div>
@@ -46,20 +132,13 @@ const Index = () => {
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">
-              {userRole === 'steward' ? 'Approver Dashboard' : 'Producer Dashboard'}
+              {primaryRole === 'steward' ? 'Approver Dashboard' : 'Producer Dashboard'}
             </h1>
             <div className="flex items-center space-x-2">
-              <Badge variant={userRole === 'steward' ? 'default' : 'secondary'}>
+              <Badge variant={primaryRole === 'steward' ? 'default' : 'secondary'}>
                 <Shield className="h-3 w-3 mr-1" />
-                {userRole === 'steward' ? 'Asset Approver' : 'Data Producer'}
+                {userRoles.join(', ')}
               </Badge>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setUserRole(userRole === 'steward' ? 'producer' : 'steward')}
-              >
-                Switch Role
-              </Button>
             </div>
           </div>
         </div>
@@ -67,7 +146,7 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
-        {userRole === 'steward' ? (
+        {primaryRole === 'steward' ? (
           <div className="space-y-8">
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -152,7 +231,7 @@ const Index = () => {
                   My Submissions
                 </TabsTrigger>
                 <TabsTrigger value="submit" className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
+                  <Shield className="h-4 w-4" />
                   Submit New Asset
                 </TabsTrigger>
               </TabsList>
