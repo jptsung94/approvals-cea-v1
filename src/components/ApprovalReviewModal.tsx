@@ -136,7 +136,7 @@ export function ApprovalReviewModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0">
+      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-y-auto">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <div className="flex items-center justify-between">
             <div>
