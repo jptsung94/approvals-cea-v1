@@ -155,7 +155,7 @@ export function ProducerDetailsModal({
               </TabsTrigger>
             </TabsList>
 
-            <ScrollArea className="flex-1 px-6 py-4">
+            <ScrollArea className="flex-1 px-6 py-4 pointer-events-auto">
               <TabsContent value="details" className="mt-0 space-y-6">
                 {/* Basic Information */}
                 <Card>

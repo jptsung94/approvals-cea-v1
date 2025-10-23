@@ -169,7 +169,7 @@ export function ApprovalReviewModal({
           <div className="grid grid-cols-[300px_1fr] h-[calc(95vh-200px)]">
             {/* Left Sidebar - Checklist & Navigation */}
             <div className="border-r bg-muted/30">
-              <ScrollArea className="h-full">
+              <ScrollArea className="h-full pointer-events-auto">
                 <div className="p-4 space-y-4">
                   {/* Progress */}
                   <Card>
@@ -260,7 +260,7 @@ export function ApprovalReviewModal({
                   </TabsTrigger>
                 </TabsList>
 
-                <ScrollArea className="flex-1 px-6 py-4">
+                <ScrollArea className="flex-1 px-6 py-4 pointer-events-auto">
                   <TabsContent value="schema" className="mt-0 space-y-4">
                     <Card>
                       <CardHeader>
