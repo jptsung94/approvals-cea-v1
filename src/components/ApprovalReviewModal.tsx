@@ -136,8 +136,8 @@ export function ApprovalReviewModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-y-auto">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b">
+      <DialogContent className="max-w-[95vw] h-[95vh] p-0 flex flex-col overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
               <DialogTitle className="text-2xl flex items-center gap-3">
@@ -158,90 +158,88 @@ export function ApprovalReviewModal({
         </DialogHeader>
 
         {/* Instructions Banner */}
-        <div className="px-6 py-3 bg-primary/5 border-b">
+        <div className="px-6 py-3 bg-primary/5 border-b flex-shrink-0">
           <p className="text-sm font-medium text-primary">
             <AlertCircle className="h-4 w-4 inline mr-2" />
             Review all required sections in the checklist before making a decision. Use the discussion panel to communicate with the producer.
           </p>
         </div>
 
-        <div className="flex-1 overflow-hidden">
-          <div className="grid grid-cols-[300px_1fr] h-[calc(95vh-200px)]">
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid grid-cols-[300px_1fr] min-h-full">
             {/* Left Sidebar - Checklist & Navigation */}
             <div className="border-r bg-muted/30">
-              <ScrollArea className="h-full pointer-events-auto">
-                <div className="p-4 space-y-4">
-                  {/* Progress */}
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm">Review Progress</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Progress value={checklistProgress} className="mb-2" />
-                      <p className="text-xs text-muted-foreground">{checklistProgress}% Complete</p>
-                    </CardContent>
-                  </Card>
+              <div className="p-4 space-y-4">
+                {/* Progress */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Review Progress</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Progress value={checklistProgress} className="mb-2" />
+                    <p className="text-xs text-muted-foreground">{checklistProgress}% Complete</p>
+                  </CardContent>
+                </Card>
 
-                  {/* Phase Navigation */}
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm">Review Phases</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      {phases.map((phase) => {
-                        const Icon = phase.icon
-                        return (
-                          <Button
-                            key={phase.id}
-                            variant={activePhase === phase.id ? "default" : "ghost"}
-                            className="w-full justify-start"
-                            size="sm"
-                            onClick={() => setActivePhase(phase.id)}
-                          >
-                            <Icon className="h-4 w-4 mr-2" />
-                            {phase.label}
-                          </Button>
-                        )
-                      })}
-                    </CardContent>
-                  </Card>
+                {/* Phase Navigation */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Review Phases</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {phases.map((phase) => {
+                      const Icon = phase.icon
+                      return (
+                        <Button
+                          key={phase.id}
+                          variant={activePhase === phase.id ? "default" : "ghost"}
+                          className="w-full justify-start"
+                          size="sm"
+                          onClick={() => setActivePhase(phase.id)}
+                        >
+                          <Icon className="h-4 w-4 mr-2" />
+                          {phase.label}
+                        </Button>
+                      )
+                    })}
+                  </CardContent>
+                </Card>
 
-                  {/* Approval Checklist */}
-                  <ApprovalChecklist 
-                    assetId={asset.id}
-                    onProgressChange={setChecklistProgress}
-                  />
+                {/* Approval Checklist */}
+                <ApprovalChecklist 
+                  assetId={asset.id}
+                  onProgressChange={setChecklistProgress}
+                />
 
-                  {/* Key Details */}
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm">Key Details</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3 text-xs">
-                      <div>
-                        <p className="text-muted-foreground">Producer</p>
-                        <p className="font-medium">{asset.producer}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Risk Score</p>
-                        <Badge variant={asset.riskScore > 50 ? "destructive" : "secondary"}>
-                          {asset.riskScore}%
-                        </Badge>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Data Classification</p>
-                        <p className="font-medium">{asset.metadata.sensitivity || 'Internal'}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </ScrollArea>
+                {/* Key Details */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Key Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-xs">
+                    <div>
+                      <p className="text-muted-foreground">Producer</p>
+                      <p className="font-medium">{asset.producer}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Risk Score</p>
+                      <Badge variant={asset.riskScore > 50 ? "destructive" : "secondary"}>
+                        {asset.riskScore}%
+                      </Badge>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Data Classification</p>
+                      <p className="font-medium">{asset.metadata.sensitivity || 'Internal'}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
 
             {/* Main Content Area */}
-            <div className="flex flex-col">
+            <div className="flex flex-col min-h-full">
               <Tabs value={activePhase} onValueChange={setActivePhase} className="flex-1 flex flex-col">
-                <TabsList className="mx-6 mt-4">
+                <TabsList className="mx-6 mt-4 flex-shrink-0">
                   <TabsTrigger value="schema">
                     <Database className="h-4 w-4 mr-2" />
                     Schema
@@ -260,7 +258,7 @@ export function ApprovalReviewModal({
                   </TabsTrigger>
                 </TabsList>
 
-                <ScrollArea className="flex-1 px-6 py-4 pointer-events-auto">
+                <div className="flex-1 px-6 py-4">
                   <TabsContent value="schema" className="mt-0 space-y-4">
                     <Card>
                       <CardHeader>
@@ -322,11 +320,11 @@ export function ApprovalReviewModal({
                       onAddComment={onAddComment}
                     />
                   </TabsContent>
-                </ScrollArea>
+                </div>
               </Tabs>
 
               {/* Action Footer */}
-              <div className="border-t bg-card px-6 py-4">
+              <div className="border-t bg-card px-6 py-4 flex-shrink-0">
                 <div className="space-y-3">
                   <Textarea
                     placeholder="Add your review comments or feedback..."
