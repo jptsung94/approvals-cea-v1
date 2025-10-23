@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { StatusBadge, type AssetStatus } from "./StatusBadge"
+import { ProducerDetailsModal } from "./ProducerDetailsModal"
 import { Clock, CheckCircle, XCircle, MessageSquare, Upload, TrendingUp, Database, BarChart3, FileText, Search, Bell } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
@@ -22,6 +23,19 @@ interface ProducerAsset {
   currentStep?: string
   sla?: string
   waitingOn?: string
+  description?: string
+  category?: string
+  metadata: Record<string, any>
+  comments: Comment[]
+}
+
+interface Comment {
+  id: string
+  author: string
+  message: string
+  timestamp: string
+  type: 'feedback' | 'question' | 'approval' | 'revision_request'
+  phase?: string
 }
 
 const mockProducerAssets: ProducerAsset[] = [
@@ -37,7 +51,16 @@ const mockProducerAssets: ProducerAsset[] = [
     approvers: ['Kelly Schwartz (COE)', 'Rakesh Sharma (PDS)', 'Samar Sharma (AE)'],
     currentStep: 'COE Review',
     sla: '5 business days',
-    waitingOn: 'Kelly Schwartz'
+    waitingOn: 'Kelly Schwartz',
+    description: 'Comprehensive customer analytics dataset including transaction history and behavioral patterns',
+    category: 'Analytics',
+    metadata: {
+      format: 'Parquet',
+      size: '2.5 GB',
+      sensitivity: 'Confidential',
+      recordCount: 1250000
+    },
+    comments: []
   },
   {
     id: 'PA-1002',
@@ -50,7 +73,23 @@ const mockProducerAssets: ProducerAsset[] = [
     approvers: ['Kelly Schwartz (COE)', 'API Coach (LOB)'],
     currentStep: 'LOB API Coach Review',
     sla: '3 business days',
-    waitingOn: 'API Coach'
+    waitingOn: 'API Coach',
+    description: 'RESTful API for real-time sales performance metrics and KPI tracking',
+    category: 'Sales',
+    metadata: {
+      endpoints: 8,
+      version: 'v1.2',
+      authentication: 'OAuth 2.0'
+    },
+    comments: [
+      {
+        id: 'c1',
+        author: 'Kelly Schwartz',
+        message: 'Please add rate limiting documentation',
+        timestamp: '2024-01-19T15:30:00Z',
+        type: 'feedback'
+      }
+    ]
   },
   {
     id: 'PA-1003',
@@ -62,7 +101,23 @@ const mockProducerAssets: ProducerAsset[] = [
     commentsCount: 1,
     approvers: ['Data Guardian (Marketing)', 'DDRO'],
     currentStep: 'Complete',
-    sla: '2 business days'
+    sla: '2 business days',
+    description: 'Q4 marketing campaign performance data',
+    category: 'Marketing',
+    metadata: {
+      format: 'CSV',
+      size: '500 MB',
+      campaigns: 45
+    },
+    comments: [
+      {
+        id: 'c2',
+        author: 'Data Guardian',
+        message: 'Approved - meets all compliance requirements',
+        timestamp: '2024-01-19T11:30:00Z',
+        type: 'approval'
+      }
+    ]
   },
   {
     id: 'PA-1004',
@@ -74,7 +129,23 @@ const mockProducerAssets: ProducerAsset[] = [
     commentsCount: 3,
     approvers: ['Kelly Schwartz (COE)', 'Model Governance'],
     currentStep: 'Rejected - Action Required',
-    sla: '5 business days'
+    sla: '5 business days',
+    description: 'Machine learning model for product recommendations',
+    category: 'AI/ML',
+    metadata: {
+      modelType: 'Collaborative Filtering',
+      accuracy: '87%',
+      trainingData: 'Customer purchase history'
+    },
+    comments: [
+      {
+        id: 'c3',
+        author: 'Model Governance',
+        message: 'Missing bias testing documentation. Please provide fairness metrics.',
+        timestamp: '2024-01-18T10:20:00Z',
+        type: 'revision_request'
+      }
+    ]
   },
   {
     id: 'PA-1005',
@@ -88,7 +159,15 @@ const mockProducerAssets: ProducerAsset[] = [
     approvers: ['Kelly Schwartz (COE)', 'Stream Coach'],
     currentStep: 'Governance Engine Validation',
     sla: '4 business days',
-    waitingOn: 'Auto-validation in progress'
+    waitingOn: 'Auto-validation in progress',
+    description: 'Real-time stream of transaction events for fraud detection',
+    category: 'Streaming',
+    metadata: {
+      throughput: '10k events/sec',
+      retention: '7 days',
+      format: 'Avro'
+    },
+    comments: []
   }
 ]
 
@@ -100,9 +179,11 @@ const typeIcons = {
 }
 
 export function ProducerDashboard() {
-  const [assets] = useState<ProducerAsset[]>(mockProducerAssets)
+  const [assets, setAssets] = useState<ProducerAsset[]>(mockProducerAssets)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState<'open' | 'closed'>('open')
+  const [selectedAsset, setSelectedAsset] = useState<ProducerAsset | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const { toast } = useToast()
 
   const filteredAssets = useMemo(() => {
@@ -137,6 +218,43 @@ export function ProducerDashboard() {
     toast({
       title: "Reminder Sent",
       description: `Reminder sent to ${waitingOn} for approval request ${assetId}`
+    })
+  }
+
+  const handleViewDetails = (asset: ProducerAsset) => {
+    setSelectedAsset(asset)
+    setIsModalOpen(true)
+  }
+
+  const handleUpdateAsset = (assetId: string, updates: Partial<ProducerAsset>) => {
+    setAssets(prev => prev.map(asset =>
+      asset.id === assetId ? { ...asset, ...updates, lastUpdated: new Date().toISOString() } : asset
+    ))
+  }
+
+  const handleAddComment = (assetId: string, message: string, phase?: string) => {
+    const newComment: Comment = {
+      id: Math.random().toString(36).substr(2, 9),
+      author: 'Producer',
+      message: message.trim(),
+      timestamp: new Date().toISOString(),
+      type: 'question',
+      phase
+    }
+
+    setAssets(prev => prev.map(asset =>
+      asset.id === assetId
+        ? {
+            ...asset,
+            comments: [...asset.comments, newComment],
+            commentsCount: asset.commentsCount + 1
+          }
+        : asset
+    ))
+
+    toast({
+      title: "Comment Added",
+      description: "Your message has been sent to the reviewers."
     })
   }
 
@@ -365,7 +483,11 @@ export function ProducerDashboard() {
                         Send Reminder
                       </Button>
                     )}
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleViewDetails(asset)}
+                    >
                       View Details
                     </Button>
                   </div>
@@ -404,6 +526,18 @@ export function ProducerDashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Producer Details Modal */}
+      <ProducerDetailsModal
+        asset={selectedAsset}
+        open={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false)
+          setSelectedAsset(null)
+        }}
+        onUpdate={handleUpdateAsset}
+        onAddComment={handleAddComment}
+      />
     </div>
   )
 }
