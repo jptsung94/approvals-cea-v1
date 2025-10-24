@@ -15,7 +15,7 @@ import { Shield, Database, Zap, Users, BarChart3, CheckCircle, Clock, Settings, 
 import logo from "@/assets/logo-greyscale.png"
 
 const Index = () => {
-  const [userRole, setUserRole] = useState<'steward' | 'producer' | 'consumer'>('steward')
+  const [userRole, setUserRole] = useState<'steward' | 'producer'>('steward')
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -49,12 +49,12 @@ const Index = () => {
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">
-              {userRole === 'steward' ? 'Approver Dashboard' : userRole === 'producer' ? 'Producer Dashboard' : 'Consumer Portal'}
+              {userRole === 'steward' ? 'Approver Dashboard' : 'Producer Dashboard'}
             </h1>
             <div className="flex items-center space-x-2">
               <Badge variant={userRole === 'steward' ? 'default' : 'secondary'}>
                 <Shield className="h-3 w-3 mr-1" />
-                {userRole === 'steward' ? 'Asset Approver' : userRole === 'producer' ? 'Data Producer' : 'Data Consumer'}
+                {userRole === 'steward' ? 'Asset Approver' : 'Data Producer'}
               </Badge>
               <div className="flex gap-2">
                 <Button
@@ -70,13 +70,6 @@ const Index = () => {
                   onClick={() => setUserRole('producer')}
                 >
                   Producer
-                </Button>
-                <Button
-                  variant={userRole === 'consumer' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setUserRole('consumer')}
-                >
-                  Consumer
                 </Button>
               </div>
             </div>
@@ -169,51 +162,46 @@ const Index = () => {
               </TabsContent>
             </Tabs>
           </div>
-        ) : userRole === 'producer' ? (
-          <div className="space-y-8">
-            {/* Producer Tabs */}
-            <Tabs defaultValue="dashboard" className="space-y-6">
-              <TabsList className="grid grid-cols-2 w-fit">
-                <TabsTrigger value="dashboard" className="flex items-center gap-2">
-                  <Database className="h-4 w-4" />
-                  My Submissions
-                </TabsTrigger>
-                <TabsTrigger value="submit" className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Submit New Asset
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="dashboard">
-                <ProducerDashboard />
-              </TabsContent>
-
-              <TabsContent value="submit">
-                <AssetSubmissionForm />
-              </TabsContent>
-            </Tabs>
-          </div>
         ) : (
           <div className="space-y-8">
-            {/* Consumer Tabs */}
-            <Tabs defaultValue="requests" className="space-y-6">
-              <TabsList className="grid grid-cols-2 w-fit">
-                <TabsTrigger value="requests" className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
+            {/* Producer Tabs */}
+            <Tabs defaultValue="assets" className="space-y-6">
+              <TabsList className="grid grid-cols-3 w-fit">
+                <TabsTrigger value="assets" className="flex items-center gap-2">
+                  <Database className="h-4 w-4" />
+                  My Asset Submissions
+                </TabsTrigger>
+                <TabsTrigger value="access" className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
                   My Access Requests
                 </TabsTrigger>
                 <TabsTrigger value="submit" className="flex items-center gap-2">
-                  <Database className="h-4 w-4" />
-                  Request Access
+                  <Clock className="h-4 w-4" />
+                  Submit New
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="requests">
+              <TabsContent value="assets">
+                <ProducerDashboard />
+              </TabsContent>
+
+              <TabsContent value="access">
                 <ConsumerDashboard />
               </TabsContent>
 
               <TabsContent value="submit">
-                <AccessRequestForm />
+                <Tabs defaultValue="asset" className="space-y-4">
+                  <TabsList>
+                    <TabsTrigger value="asset">Submit Asset</TabsTrigger>
+                    <TabsTrigger value="request">Request Access</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="asset">
+                    <AssetSubmissionForm />
+                  </TabsContent>
+                  <TabsContent value="request">
+                    <AccessRequestForm />
+                  </TabsContent>
+                </Tabs>
               </TabsContent>
             </Tabs>
           </div>
