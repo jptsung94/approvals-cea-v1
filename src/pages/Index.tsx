@@ -8,11 +8,14 @@ import { AssetSubmissionForm } from "@/components/AssetSubmissionForm"
 import { AutoApprovalRules } from "@/components/AutoApprovalRules"
 import { ProducerDashboard } from "@/components/ProducerDashboard"
 import { NotificationCenter } from "@/components/NotificationCenter"
+import { ConsumerDashboard } from "@/components/ConsumerDashboard"
+import { AccessRequestForm } from "@/components/AccessRequestForm"
+import { AccessRequestApprovalDashboard } from "@/components/AccessRequestApprovalDashboard"
 import { Shield, Database, Zap, Users, BarChart3, CheckCircle, Clock, Settings, HelpCircle, LayoutDashboard, User } from "lucide-react"
 import logo from "@/assets/logo-greyscale.png"
 
 const Index = () => {
-  const [userRole, setUserRole] = useState<'steward' | 'producer'>('steward')
+  const [userRole, setUserRole] = useState<'steward' | 'producer' | 'consumer'>('steward')
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -46,20 +49,36 @@ const Index = () => {
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">
-              {userRole === 'steward' ? 'Approver Dashboard' : 'Producer Dashboard'}
+              {userRole === 'steward' ? 'Approver Dashboard' : userRole === 'producer' ? 'Producer Dashboard' : 'Consumer Portal'}
             </h1>
             <div className="flex items-center space-x-2">
               <Badge variant={userRole === 'steward' ? 'default' : 'secondary'}>
                 <Shield className="h-3 w-3 mr-1" />
-                {userRole === 'steward' ? 'Asset Approver' : 'Data Producer'}
+                {userRole === 'steward' ? 'Asset Approver' : userRole === 'producer' ? 'Data Producer' : 'Data Consumer'}
               </Badge>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setUserRole(userRole === 'steward' ? 'producer' : 'steward')}
-              >
-                Switch Role
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant={userRole === 'steward' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setUserRole('steward')}
+                >
+                  Steward
+                </Button>
+                <Button
+                  variant={userRole === 'producer' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setUserRole('producer')}
+                >
+                  Producer
+                </Button>
+                <Button
+                  variant={userRole === 'consumer' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setUserRole('consumer')}
+                >
+                  Consumer
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -122,10 +141,14 @@ const Index = () => {
 
             {/* Steward Tabs */}
             <Tabs defaultValue="approvals" className="space-y-6">
-              <TabsList className="grid grid-cols-2 w-fit">
+              <TabsList className="grid grid-cols-3 w-fit">
                 <TabsTrigger value="approvals" className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4" />
-                  Pending Approvals
+                  Asset Approvals
+                </TabsTrigger>
+                <TabsTrigger value="access" className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Access Requests
                 </TabsTrigger>
                 <TabsTrigger value="automation" className="flex items-center gap-2">
                   <Settings className="h-4 w-4" />
@@ -137,12 +160,16 @@ const Index = () => {
                 <ApprovalDashboard />
               </TabsContent>
 
+              <TabsContent value="access">
+                <AccessRequestApprovalDashboard />
+              </TabsContent>
+
               <TabsContent value="automation">
                 <AutoApprovalRules />
               </TabsContent>
             </Tabs>
           </div>
-        ) : (
+        ) : userRole === 'producer' ? (
           <div className="space-y-8">
             {/* Producer Tabs */}
             <Tabs defaultValue="dashboard" className="space-y-6">
@@ -163,6 +190,30 @@ const Index = () => {
 
               <TabsContent value="submit">
                 <AssetSubmissionForm />
+              </TabsContent>
+            </Tabs>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {/* Consumer Tabs */}
+            <Tabs defaultValue="requests" className="space-y-6">
+              <TabsList className="grid grid-cols-2 w-fit">
+                <TabsTrigger value="requests" className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  My Access Requests
+                </TabsTrigger>
+                <TabsTrigger value="submit" className="flex items-center gap-2">
+                  <Database className="h-4 w-4" />
+                  Request Access
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="requests">
+                <ConsumerDashboard />
+              </TabsContent>
+
+              <TabsContent value="submit">
+                <AccessRequestForm />
               </TabsContent>
             </Tabs>
           </div>
